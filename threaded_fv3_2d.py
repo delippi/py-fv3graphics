@@ -160,14 +160,13 @@ def mkplot(varname):
         diff=(datestr-cycledate)
         fhr=int(diff.days*24.+diff.seconds/3600.)
         if datestr>=startplot and datestr<=endplot:
-#            print("Plotting forecast hour {:s} valid {:s}Z".format(str(fhr).zfill(3),outdate))
             # Clear off old plottables but keep all the map info
             ncepy.clear_plotables(ax,keep_ax_lst,fig)
-            var_n=fnd.variables[varname][:,:,:]
+            var_n=fnd.variables[varname][t,:,:]
             try: # Doing it this way means we only have to supply a corresponding definition for cm,clevs,etc.
                print(str(varname)+": Plotting forecast hour {:s} valid {:s}Z".format(str(fhr).zfill(3),outdate))
                function=dispatcher[varname]
-               var_n,clevs,cm,units,longname=function(var_n[t,:,:])
+               var_n,clevs,cm,units,longname=function(var_n)
             except KeyError:
                raise ValueError("invalid varname:"+varname)
             norm = matplotlib.colors.BoundaryNorm(clevs, cm.N)
@@ -212,10 +211,10 @@ def plot_CPRATsfc(var_n):
     longname="surface convective precipitation rate"; units="in."
     if(units=="in."): 
        var_n = var_n*3*3600/25.4  # inches
-       clevs =[0,0.01,0.05,0.1,0.25,0.5,0.75,1.,1.5,2.,3.,4.,5.,6.,7.] #inches
+       clevs=[0,0.01,0.05,0.1,0.25,0.5,0.75,1.,1.5,2.,3.,4.,5.,6.,7.] #inches
     elif(units=="mm"):
        var_n = var_n*3*3600      # mm
-       clevs = [0,0.1,2,5,10,15,20,25,35,50,75,100,125,150,175]  #mm
+       clevs= [0,0.1,2,5,10,15,20,25,35,50,75,100,125,150,175]  #mm
     clist=[0,23,22,21,20,19,10,17,16,15,14,29,28,24,25]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname)
@@ -226,10 +225,10 @@ def plot_PRATEsfc(var_n):
     longname="surface precipitation rate"; units="in."
     if(units=="in."):
        var_n = var_n*3*3600/25.4  # inches
-       clevs =[0,0.01,0.05,0.1,0.25,0.5,0.75,1.,1.5,2.,3.,4.,5.,6.,7.] #inches
+       clevs=[0,0.01,0.05,0.1,0.25,0.5,0.75,1.,1.5,2.,3.,4.,5.,6.,7.] #inches
     elif(units=="mm"):
        var_n = var_n*3*3600      # mm
-       clevs = [0,0.1,2,5,10,15,20,25,35,50,75,100,125,150,175]  #mm
+       clevs= [0,0.1,2,5,10,15,20,25,35,50,75,100,125,150,175]  #mm
     clist=[0,23,22,21,20,19,10,17,16,15,14,29,28,24,25]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname)
@@ -287,7 +286,7 @@ def plot_ULWRFtoa(var_n):
 def plot_GFLUXsfc(var_n):
     """surface ground heat flux [W/m**2]"""
     longname="surface ground heat flux"; units="W/m**2"
-    clevs = [-300.,-200.,-100.,-75.,-50.,-25.0,-10.0,0.,10.0,25.,50.,75.,100.,200.,300.]
+    clevs= [-300.,-200.,-100.,-75.,-50.,-25.0,-10.0,0.,10.0,25.,50.,75.,100.,200.,300.]
     cm=ncepy.ncl_grnd_hflux()
     return(var_n,clevs,cm,units,longname)
 
@@ -348,7 +347,7 @@ def plot_PRESsfc(var_n): # done
 def plot_PWATclm(var_n):
     """atmos column precipitable water [kg/m**2]"""
     longname="atmos column precipitable water"; units="mm"
-    clevs = [4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,64,68,72,76]
+    clevs= [4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,64,68,72,76]
     clist = [0,16,18,30,28,27,25,4,23,3,21,8,5,19,17,31,12,2,7,14]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname)
@@ -358,7 +357,7 @@ def plot_SOILM(var_n):
     longname="total column soil moisture content"; units="in."
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
     if(units=="in."): var_n = var_n/25.4 #inches
-    clevs = [4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,64,68,72,76]
+    clevs= [4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,64,68,72,76]
     clist = [0,16,18,30,28,27,25,4,23,3,21,8,5,19,17,31,12,2,7,14]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname)
@@ -367,7 +366,7 @@ def plot_SOILW1(var_n):
     """volumetric soil moisture 0-10cm [fraction]"""
     longname="volumetric soil moisture 0-10cm"; units="fraction"
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
-    clevs =[0,.10,.20,.30,.40,.50,.60,.70,.75,.80,.85,.90,.95,1]
+    clevs=[0,.10,.20,.30,.40,.50,.60,.70,.75,.80,.85,.90,.95,1]
     clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname)
@@ -376,7 +375,7 @@ def plot_SOILW2(var_n):
     """volumetric soil moisture 10-40cm [fraction]"""
     longname="volumetric soil moisture 10-40cm"; units="fraction"
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
-    clevs =[0,.10,.20,.30,.40,.50,.60,.70,.75,.80,.85,.90,.95,1]
+    clevs=[0,.10,.20,.30,.40,.50,.60,.70,.75,.80,.85,.90,.95,1]
     clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname)
@@ -385,7 +384,7 @@ def plot_SOILW3(var_n):
     """volumetric soil moisture 40-100cm [fraction]"""
     longname="volumetric soil moisture 40-100cm"; units="fraction"
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
-    clevs =[0,.10,.20,.30,.40,.50,.60,.70,.75,.80,.85,.90,.95,1]
+    clevs=[0,.10,.20,.30,.40,.50,.60,.70,.75,.80,.85,.90,.95,1]
     clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname)
@@ -394,7 +393,7 @@ def plot_SOILW4(var_n):
     """volumetric soil moisture 100-200cm [fraction]"""
     longname="volumetric soil moisture 100-200cm"; units="fraction"
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
-    clevs =[0,.10,.20,.30,.40,.50,.60,.70,.75,.80,.85,.90,.95,1]
+    clevs=[0,.10,.20,.30,.40,.50,.60,.70,.75,.80,.85,.90,.95,1]
     clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname)
@@ -412,7 +411,7 @@ def plot_SOILT1(var_n): #done
     longname="soil temperature 0-10cm"; units="F"
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
     if(units=="F"): var_n=ncepy.Kelvin2F(var_n) # [F]
-    clevs = np.arange(-36.,104.,4)
+    clevs= np.arange(-36.,104.,4)
     cm=ncepy.ncl_t2m()
     return(var_n,clevs,cm,units,longname)
 
@@ -421,7 +420,7 @@ def plot_SOILT2(var_n): #done
     longname="soil temperature 10-40cm"; units="F"
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
     if(units=="F"): var_n=ncepy.Kelvin2F(var_n) # [F]
-    clevs = np.arange(-36.,104.,4)
+    clevs= np.arange(-36.,104.,4)
     cm=ncepy.ncl_t2m()
     return(var_n,clevs,cm,units,longname)
 
@@ -430,7 +429,7 @@ def plot_SOILT3(var_n): #done
     longname="soil temperature 40-100cm"; units="F"
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
     if(units=="F"): var_n=ncepy.Kelvin2F(var_n) # [F]
-    clevs = np.arange(-36.,104.,4)
+    clevs= np.arange(-36.,104.,4)
     cm=ncepy.ncl_t2m()
     return(var_n,clevs,cm,units,longname)
 
@@ -439,7 +438,7 @@ def plot_SOILT4(var_n): #done
     longname="soil temperature 100-200cm"; units="F"
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
     if(units=="F"): var_n=ncepy.Kelvin2F(var_n) # [F]
-    clevs = np.arange(-36.,104.,4)
+    clevs= np.arange(-36.,104.,4)
     cm=ncepy.ncl_t2m()
     return(var_n,clevs,cm,units,longname)
 
@@ -447,7 +446,7 @@ def plot_TMP2m(var_n):
     """2m temperature [K]"""
     longname="2m temperature"; units="F"
     if(units=="F"): var_n=ncepy.Kelvin2F(var_n) # [F]
-    clevs = np.arange(-36.,104.,4)
+    clevs= np.arange(-36.,104.,4)
     cm=ncepy.ncl_t2m()
     return(var_n,clevs,cm,units,longname)
 
@@ -455,7 +454,7 @@ def plot_TMPsfc(var_n):
     """surface temperature [K]"""
     longname="surface temperature"; units="F"
     if(units=="F"): var_n=ncepy.Kelvin2F(var_n) # [F]
-    clevs = np.arange(-36.,104.,4)
+    clevs= np.arange(-36.,104.,4)
     cm=ncepy.ncl_t2m()
     return(var_n,clevs,cm,units,longname)
 
@@ -507,9 +506,9 @@ def plot_WEASDsfc(var_n):
     longname="surface snow water equivalent"; units="in."
     if(units=="in."):
        var_n = var_n/25.4  # inches
-       clevs =[0,0.01,0.05,0.1,0.25,0.5,0.75,1.,1.5,2.,3.,4.,5.,6.,7.] #inches
+       clevs=[0,0.01,0.05,0.1,0.25,0.5,0.75,1.,1.5,2.,3.,4.,5.,6.,7.] #inches
     elif(units=="mm"):
-       clevs = [0,0.1,2,5,10,15,20,25,35,50,75,100,125,150,175]  #mm
+       clevs= [0,0.1,2,5,10,15,20,25,35,50,75,100,125,150,175]  #mm
     clist=[0,23,22,21,20,19,10,17,16,15,14,29,28,24,25]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname)
@@ -519,10 +518,10 @@ def plot_SNODsfc(var_n):
     longname="surface snow depth"; units="in."
     if(units=="in."):
        var_n = var_n/0.0254  # inches
-       clevs =[0,0.01,0.05,0.1,0.25,0.5,0.75,1.,1.5,2.,3.,4.,5.,6.,7.] #inches
+       clevs=[0,0.01,0.05,0.1,0.25,0.5,0.75,1.,1.5,2.,3.,4.,5.,6.,7.] #inches
     elif(units=="mm"):
        var_n = var_n/1000.      # mm
-       clevs = [0,0.1,2,5,10,15,20,25,35,50,75,100,125,150,175]  #mm
+       clevs= [0,0.1,2,5,10,15,20,25,35,50,75,100,125,150,175]  #mm
     clist=[0,23,22,21,20,19,10,17,16,15,14,29,28,24,25]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname)
@@ -566,7 +565,7 @@ def plot_STYPEsfc(var_n):
 def plot_TCDCclm(var_n):
     """atmos column total cloud cover [%]"""
     longname="atmos column total cloud cover"; units="%"
-    clevs =[0,10,20,30,40,50,60,70,75,80,85,90,95,100] # percent
+    clevs=[0,10,20,30,40,50,60,70,75,80,85,90,95,100] # percent
     clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname)
@@ -574,7 +573,7 @@ def plot_TCDCclm(var_n):
 def plot_TCDChcl(var_n):
     """high cloud level total cloud cover [%]"""
     longname="high cloud level total cloud cover"; units="%"
-    clevs =[0,10,20,30,40,50,60,70,75,80,85,90,95,100] #percent
+    clevs=[0,10,20,30,40,50,60,70,75,80,85,90,95,100] #percent
     clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname)
@@ -582,7 +581,7 @@ def plot_TCDChcl(var_n):
 def plot_TCDCmcl(var_n): 
     """mid cloud level total cloud cover [%]"""
     longname="mid cloud level total cloud cover"; units="%"
-    clevs =[0,10,20,30,40,50,60,70,75,80,85,90,95,100] #percent
+    clevs=[0,10,20,30,40,50,60,70,75,80,85,90,95,100] #percent
     clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname)
@@ -590,7 +589,7 @@ def plot_TCDCmcl(var_n):
 def plot_TCDClcl(var_n): 
     """low cloud level total cloud cover [%]"""
     longname="low cloud level total cloud cover"; units="%"
-    clevs =[0,10,20,30,40,50,60,70,75,80,85,90,95,100] # percent
+    clevs=[0,10,20,30,40,50,60,70,75,80,85,90,95,100] # percent
     clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname) 

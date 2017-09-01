@@ -35,7 +35,7 @@ nestedgrid = os.path.join(gesdir,'grid_spec.nest02.nc')      # name of grid spec
 dom="CONUS"                                               # domain (can be CONUS, SC, etc.)
 proj="gnom"                                               # map projection
 varnames=[                                                # uncomment the desired variables below
-          'ALBDOsfc',\
+#          'ALBDOsfc',\
 #          'CPRATsfc',\
 #          'PRATEsfc',\
 #          'DLWRFsfc',\
@@ -52,20 +52,20 @@ varnames=[                                                # uncomment the desire
 #          'SLMSKsfc',\
 #          'LHTFLsfc',\
 #          'SHTFLsfc',\
-#x          'PRESsfc',\
-#x          'PWATclm',\
-#x          'SOILM',\
-#x          'SOILW1',\
-#x          'SOILW2',\
-#x          'SOILW3',\
-#x          'SOILW4',\
+#          'PRESsfc',\
+#          'PWATclm',\
+#          'SOILM',\
+#          'SOILW1',\
+#          'SOILW2',\
+#          'SOILW3',\
+#          'SOILW4',\
 #          'SPFH2m',\
-#x          'SOILT1',\
-#x          'SOILT2',\
-#x          'SOILT3',\
-#x          'SOILT4',\
-#          'TMP2m',\
-#          'TMPsfc',\
+          'SOILT1',\
+          'SOILT2',\
+          'SOILT3',\
+          'SOILT4',\
+          'TMP2m',\
+          'TMPsfc',\
 #          'UGWDsfc',\
 #          'VGWDsfc',\
 #          'UFLXsfc',\
@@ -78,8 +78,8 @@ varnames=[                                                # uncomment the desire
 #          'VFRACsfc',\
 #          'F10Msfc',\
 #          'VTYPEsfc',\
-#          'STYPEsfc',\
-#          'TCDCclm',\
+          'STYPEsfc',\
+          'TCDCclm',\
 #          'TCDChcl',\
 #          'TCDCmcl',\
 #          'TCDClcl',\
@@ -176,7 +176,7 @@ def mkplot(varname):
             cbar.ax.tick_params(labelsize=8.5)
             cbar.set_label(varname+": "+longname+" increments  ["+str(units)+"]")
             plt.title(outdate+"    FHR "+str(fhr).zfill(3),loc='left',fontsize=10,)
-            plt.savefig(outputdir+ varname + '_%03d.png' % (fhr),dpi=125, bbox_inches='tight')
+            plt.savefig(outputdir+ varname + '_%03d_incs.png' % (fhr),dpi=125, bbox_inches='tight')
 
     plt.close('all')
 
@@ -219,7 +219,6 @@ def plot_CPRATsfc(var_n):
        var_n = var_n*3*3600      # mm
        clevs= [0,0.1,2,5,10,15,20,25,35,50,75,100,125,150,175]  #mm
        clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist=[0,23,22,21,20,19,10,17,16,15,14,29,28,24,25]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
@@ -235,71 +234,64 @@ def plot_PRATEsfc(var_n):
        var_n = var_n*3*3600      # mm
        clevs= [0,0.1,2,5,10,15,20,25,35,50,75,100,125,150,175]  #mm
        clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist=[0,23,22,21,20,19,10,17,16,15,14,29,28,24,25]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_DLWRFsfc(var_n):
     """surface downward longwave flux [W/m**2]"""
     longname="surface downward longwave flux"; units="W/m**2"
-    clevs= [0,10,25,50,75,100,150,200,250,300,400,500,600,700,800,900,1000,1100,1200]
+    clevs=np.arange(0,525,25)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist= [0,30,28,27,25,4,23,3,21,8,5,19,17,31,12,2,7,14]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_ULWRFsfc(var_n):
     """surface upward longwave flux [W/m**2]"""
     longname="surface upward longwave flux"; units="W/m**2"
-    clevs= [0,10,25,50,75,100,150,200,250,300,400,500,600,700,800,900,1000,1100,1200]
+    clevs=np.arange(0,525,25)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist= [0,30,28,27,25,4,23,3,21,8,5,19,17,31,12,2,7,14]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_DSWRFsfc(var_n):
     """surface downward shortwave flux [W/m**2]"""
     longname="surface downward shortwave flux"; units="W/m**2"
-    clevs= [0,10,25,50,75,100,150,200,250,300,400,500,600,700,800,900,1000,1100,1200]
+    clevs=np.arange(0,1050,50)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist= [0,30,28,27,25,4,23,3,21,8,5,19,17,31,12,2,7,14]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_USWRFsfc(var_n):
     """surface upward shortwave flux [W/m**2]"""
     longname="surface upward shortwave flux"; units="W/m**2"
-    clevs= [0,10,25,50,75,100,150,200,250,300,400,500,600,700,800,900,1000,1100,1200]
+    clevs=np.arange(0,1050,50)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist= [0,30,28,27,25,4,23,3,21,8,5,19,17,31,12,2,7,14]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_DSWRFtoa(var_n):
     """top of atmos downward shortwave flux [W/m**2]"""
     longname="top of atmos downward shortwave flux"; units="W/m**2"
-    clevs= [0,10,25,50,75,100,150,200,250,300,400,500,600,700,800,900,1000,1100,1200]
+    clevs=np.arange(0,1050,50)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist= [0,30,28,27,25,4,23,3,21,8,5,19,17,31,12,2,7,14]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_USWRFtoa(var_n):
     """top of atmos upward shortwave flux [W/m**2]"""
     longname="top of atmos upward shortwave flux"; units="W/m**2"
-    clevs= [0,10,25,50,75,100,150,200,250,300,400,500,600,700,800,900,1000,1100,1200]
+    clevs=np.arange(0,1050,50)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist= [0,30,28,27,25,4,23,3,21,8,5,19,17,31,12,2,7,14]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_ULWRFtoa(var_n):
-#    """top of atmos upward longwave flux [W/m**2]"""
+    """top of atmos upward longwave flux [W/m**2]"""
     longname="top of atmos upward longwave flux"; units="W/m**2"
-    clevs= [0,10,25,50,75,100,150,200,250,300,400,500,600,700,800,900,1000,1100,1200]
+    clevs=np.arange(0,525,25)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist= [0,30,28,27,25,4,23,3,21,8,5,19,17,31,12,2,7,14]
     cm=plt.get_cmap(name='RdBu_r')
+    #clevs=np.arange(0,15000.5,1000)
     return(var_n,clevs,cm,units,longname)
 
 def plot_GFLUXsfc(var_n):
@@ -307,49 +299,56 @@ def plot_GFLUXsfc(var_n):
     longname="surface ground heat flux"; units="W/m**2"
     clevs= [-300.,-200.,-100.,-75.,-50.,-25.0,-10.0,0.,10.0,25.,50.,75.,100.,200.,300.]
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist= [0,30,28,27,25,  4, 23,  3, 21,  8,  5, 19, 17, 31, 12,  2,   7,  14]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_HGTsfc(var_n):
     """surface geopotential height [gpm]"""
     longname="surface geopotential height"; units="gpm"
-    return 0
+    clevs=[0,250.,500.,750.,1000.,1500.,2000.,3000.,4000.,5000.,7500.,10000.,15000.,20000.,25000.,30000.,30000.5]
+    clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_HPBLsfc(var_n):
     """surface planetary boundary layer height [m]"""
     longname="surface planetary boundary layer height"; units="m"
-    return 0
+    clevs=[0,50.,100.,150.,200.,250.,500.,750.,1000.,1500.,2000.,3000.,4000.,5000.,7500.]
+    clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_ICECsfc(var_n):
     """surface ice concentration (ice=1; no ice=0) [fraction]"""
     longname="surface ice concentration"; units="(ice=1; no ice=0)"
-    return 0
+    clevs=[0,0.5,1]
+    clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    clist=[23,27]
+    return(var_n,clevs,cm,units,longname)
 
 def plot_SLMSKsfc(var_n):
     """sea-land-ice mask (0-sea, 1-land, 2-ice)"""
     longname="sea-land-ice mask"; units="0-sea, 1-land, 2-ice"
-    clevs=[0,1,2,3]
+    clevs=[0,1,2,2.01]
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist=[24,18,27]
     cm=plt.get_cmap(name='RdBu_r')
+    clist=[24,18,27]
     return(var_n,clevs,cm,units,longname) 
 
 def plot_LHTFLsfc(var_n):
     """surface latent heat flux [W/m**2]"""
     longname="surface latent heat flux"; units="W/m**2"
-    clevs= [-350,-200,-150,-100,-75,-50,-25,0,25,50,100,150,200,300,400,600,800,1000,1200]
+    clevs=[-300.,-200.,-100.,-75.,-50.,-25.0,-10.0,-5.,5.,10.0,25.,50.,75.,100.,200.,300]
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist= [16,18,30,28,27,25,0,4,23,3,21,8,5,19,17,31,12,2,7,14]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_SHTFLsfc(var_n):
     """surface sensible heat flux [W/m**2]"""
     longname="surface sensible heat flux"; units="W/m**2"
-    clevs= [-350,-200,-150,-100,-75,-50,-25,0,25,50,100,150,200,300,400,600,800,1000,1200]
+    clevs=[-300.,-200.,-100.,-75.,-50.,-25.0,-10.0,0.,10.0,25.,50.,75.,100.,200.,300.]
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist= [16,18,30,28,27,25,0,4,23,3,21,8,5,19,17,31,12,2,7,14]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
@@ -361,6 +360,7 @@ def plot_PRESsfc(var_n): # done
     var_n=scipy.ndimage.gaussian_filter(var_n, 2) # second pass
     clevs=np.arange(950.,1050.,4.)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_PWATclm(var_n):
@@ -368,8 +368,8 @@ def plot_PWATclm(var_n):
     longname="atmos column precipitable water"; units="mm"
     clevs= [4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,64,68,72,76]
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist= [0,16,18,30,28,27,25,4,23,3,21,8,5,19,17,31,12,2,7,14]
     cm=plt.get_cmap(name='RdBu_r')
+    clist = [0,16,18,30,28,27,25,4,23,3,21,8,5,19,17,31,12,2,7,14]
     return(var_n,clevs,cm,units,longname)
 
 def plot_SOILM(var_n):
@@ -379,8 +379,8 @@ def plot_SOILM(var_n):
     if(units=="in."): var_n = var_n/25.4 #inches
     clevs= [4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,64,68,72,76]
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist= [0,16,18,30,28,27,25,4,23,3,21,8,5,19,17,31,12,2,7,14]
     cm=plt.get_cmap(name='RdBu_r')
+    clist = [0,16,18,30,28,27,25,4,23,3,21,8,5,19,17,31,12,2,7,14]
     return(var_n,clevs,cm,units,longname)
 
 def plot_SOILW1(var_n):
@@ -389,7 +389,6 @@ def plot_SOILW1(var_n):
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
     clevs=[0,.10,.20,.30,.40,.50,.60,.70,.75,.80,.85,.90,.95,1]
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
@@ -399,7 +398,6 @@ def plot_SOILW2(var_n):
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
     clevs=[0,.10,.20,.30,.40,.50,.60,.70,.75,.80,.85,.90,.95,1]
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
@@ -409,7 +407,6 @@ def plot_SOILW3(var_n):
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
     clevs=[0,.10,.20,.30,.40,.50,.60,.70,.75,.80,.85,.90,.95,1]
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
@@ -419,142 +416,191 @@ def plot_SOILW4(var_n):
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
     clevs=[0,.10,.20,.30,.40,.50,.60,.70,.75,.80,.85,.90,.95,1]
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_SPFH2m(var_n):
     """2m specific humidity [kg/kg]"""
-    longname="2m specific humidity"; units="kg/kg"
-    clevs=np.arange(0.,0.08,.003)
+    longname="2m specific humidity"; units="g/kg" #units="kg/kg *10-3"
+    var_n=var_n*1000
+    clevs=np.arange(0.,32.5,1)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_SOILT1(var_n): #done
     """soil temperature 0-10cm [K]"""
-    longname="soil temperature 0-10cm"; units="F"
+    longname="soil temperature 0-10cm"; units="C"
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
-    if(units=="F"): var_n=ncepy.Kelvin2F(var_n) # [F]
     clevs= np.arange(-36.,104.,4)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_SOILT2(var_n): #done
     """soil temperature 10-40cm [K]"""
-    longname="soil temperature 10-40cm"; units="F"
+    longname="soil temperature 10-40cm"; units="C"
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
-    if(units=="F"): var_n=ncepy.Kelvin2F(var_n) # [F]
     clevs= np.arange(-36.,104.,4)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_SOILT3(var_n): #done
     """soil temperature 40-100cm [K]"""
-    longname="soil temperature 40-100cm"; units="F"
+    longname="soil temperature 40-100cm"; units="C"
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
-    if(units=="F"): var_n=ncepy.Kelvin2F(var_n) # [F]
     clevs= np.arange(-36.,104.,4)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_SOILT4(var_n): #done
     """soil temperature 100-200cm [K]"""
-    longname="soil temperature 100-200cm"; units="F"
+    longname="soil temperature 100-200cm"; units="C"
     var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
-    if(units=="F"): var_n=ncepy.Kelvin2F(var_n) # [F]
     clevs= np.arange(-36.,104.,4)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_TMP2m(var_n):
     """2m temperature [K]"""
-    longname="2m temperature"; units="F"
-    if(units=="F"): var_n=ncepy.Kelvin2F(var_n) # [F]
+    longname="2m temperature"; units="C"
     clevs= np.arange(-36.,104.,4)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_TMPsfc(var_n):
     """surface temperature [K]"""
-    longname="surface temperature"; units="F"
-    if(units=="F"): var_n=ncepy.Kelvin2F(var_n) # [F]
+    longname="surface temperature"; units="C"
     clevs= np.arange(-36.,104.,4)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
 def plot_UGWDsfc(var_n): 
     """surface zonal gravity wave stress [N/m**2]"""
     longname="surface zonal gravity wave stress"; units="N/m**2"
-    return 0
+    clevs=[-5,-2.5,-1,-0.05,-0.01,0.01,0.05,1,2.5,5]
+    clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_VGWDsfc(var_n): 
     """surface meridional gravity wave stress [N/m**2]"""
     longname="surface meridional gravity wave stress"; units="N/m**2"
-    return 0
+    clevs=[-5,-2.5,-1,-0.05,-0.01,0.01,0.05,1,2.5,5]
+    clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_UFLXsfc(var_n): 
     """surface zonal momentum flux [N/m**2]"""
     longname="surface zonal momentum flux"; units="N/m**2"
-    return 0
+    clevs=np.arange(-1,1.05,0.1)
+    clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_VFLXsfc(var_n): 
     """surface meridional momentum flux [N/m**2]"""
     longname="surface meridional momentum flux"; units="N/m**2"
-    return 0
+    clevs=np.arange(-1,1.05,0.1)
+    clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_UGRD10m(var_n): 
     """10 meter u wind [m/s]"""
     longname="10 meter u wind"; units="m/s"
-    return 0
+    clevs=np.arange(-20,20.5,2)
+    clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_VGRD10m(var_n): 
     """10 meter v wind [m/s]"""
     longname="10 meter v wind"; units="m/s"
-    return 0
+    clevs=np.arange(-20,20.5,2)
+    clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_WEASDsfc(var_n): 
     """surface snow water equivalent [kg/m**2]"""
-    longname="surface snow water equivalent"; units="mm"
-    return 0
+    longname="surface snow water equivalent"; units="in."
+    if(units=="in."):
+       var_n = var_n/25.4  # inches
+       clevs=[0,0.01,0.05,0.1,0.25,0.5,0.75,1.,1.5,2.,3.,4.,5.,6.,7.] #inches
+       clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    elif(units=="mm"):
+       clevs= [0,0.1,2,5,10,15,20,25,35,50,75,100,125,150,175]  #mm
+       clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_SNODsfc(var_n): 
     """surface snow depth [m]"""
-    longname="surface snow depth"; units="m"
-    return 0
+    longname="surface snow depth"; units="in."
+    if(units=="in."):
+       var_n = var_n/0.0254  # inches
+       clevs=[0,0.01,0.05,0.1,0.25,0.5,0.75,1.,1.5,2.,3.,4.,5.,6.,7.] #inches
+       clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    elif(units=="mm"):
+       var_n = var_n/1000.      # mm
+       clevs= [0,0.1,2,5,10,15,20,25,35,50,75,100,125,150,175]  #mm
+       clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_ZORLsfc(var_n):
     """surface roughness [m]"""
     longname="surface roughness"; units="m"
-    return 0
+    clevs=np.arange(0,3.1,0.1)
+    clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_VFRACsfc(var_n):
     """vegetation fraction"""
     longname="vegetation fraction"; units="fraction"
     clevs=np.arange(0.,100.5,5.)
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    return(var_n,clevs,clist)
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_F10Msfc(var_n): 
     """10-meter wind speed divided by lowest model wind speed"""
     longname="10-meter wind speed divided by lowest model wind speed"; units="none"
-    return 0
+    clevs=np.arange(0,2.05,.1)
+    clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_VTYPEsfc(var_n): 
     """vegetation type in integer 1-13"""
     longname="vegetation type in integer 1-13"; units="1-13"
-    return 0
+    clevs=np.arange(1,15,1)
+    clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_STYPEsfc(var_n): 
     """soil type in integer 1-9"""
     longname="soil type"; units="1-9"
-    return 0
+    var_n=maskoceans(lons, lats, var_n, inlands=True, resolution=res)
+    clevs=np.arange(1,11,1)
+    clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
 
 def plot_TCDCclm(var_n):
     """atmos column total cloud cover [%]"""
     longname="atmos column total cloud cover"; units="%"
     clevs=[0,10,20,30,40,50,60,70,75,80,85,90,95,100] # percent
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
@@ -563,7 +609,6 @@ def plot_TCDChcl(var_n):
     longname="high cloud level total cloud cover"; units="%"
     clevs=[0,10,20,30,40,50,60,70,75,80,85,90,95,100] #percent
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
@@ -572,7 +617,6 @@ def plot_TCDCmcl(var_n):
     longname="mid cloud level total cloud cover"; units="%"
     clevs=[0,10,20,30,40,50,60,70,75,80,85,90,95,100] #percent
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
 
@@ -581,7 +625,6 @@ def plot_TCDClcl(var_n):
     longname="low cloud level total cloud cover"; units="%"
     clevs=[0,10,20,30,40,50,60,70,75,80,85,90,95,100] # percent
     clevs=np.arange(-0.5*clevs[-1],0.5*clevs[-1]+.5,0.1*clevs[-1])
-    clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname) 
 
@@ -607,9 +650,9 @@ def plot_Dictionary():
         'USWRFtoa':plot_USWRFtoa,
         'ULWRFtoa':plot_ULWRFtoa,
         'GFLUXsfc':plot_GFLUXsfc,
-#        'HGTsfc':plot_HGTsfc,
-#        'HPBLsfc':plot_HPBLsfc,
-#        'ICECsfc':plot_ICECsfc,
+        'HGTsfc':plot_HGTsfc,
+        'HPBLsfc':plot_HPBLsfc,
+        'ICECsfc':plot_ICECsfc,
         'SLMSKsfc':plot_SLMSKsfc,
         'LHTFLsfc':plot_LHTFLsfc,
         'SHTFLsfc':plot_SHTFLsfc,
@@ -627,19 +670,19 @@ def plot_Dictionary():
         'SOILT4':plot_SOILT4,
         'TMP2m':plot_TMP2m,
         'TMPsfc':plot_TMPsfc,
-#        'UGWDsfc':plot_UGWDsfc,
-#        'VGWDsfc':plot_VGWDsfc,
-#        'UFLXsfc':plot_UFLXsfc,
-#        'VFLXsfc':plot_VFLXsfc,
-#        'UGRD10m':plot_UGRD10m,
-#        'VGRD10m':plot_VGRD10m,
-#        'WEASDsfc':plot_WEASDsfc,
-#        'SNODsfc':plot_SNODsfc,
-#        'ZORLsfc':plot_ZORLsfc,
+        'UGWDsfc':plot_UGWDsfc,
+        'VGWDsfc':plot_VGWDsfc,
+        'UFLXsfc':plot_UFLXsfc,
+        'VFLXsfc':plot_VFLXsfc,
+        'UGRD10m':plot_UGRD10m,
+        'VGRD10m':plot_VGRD10m,
+        'WEASDsfc':plot_WEASDsfc,
+        'SNODsfc':plot_SNODsfc,
+        'ZORLsfc':plot_ZORLsfc,
         'VFRACsfc':plot_VFRACsfc,
-#        'F10Msfc':plot_F10Msfc,
-#        'VTYPEsfc':plot_VTYPEsfc,
-#        'STYPEsfc':plot_STYPEsfc,
+        'F10Msfc':plot_F10Msfc,
+        'VTYPEsfc':plot_VTYPEsfc,
+        'STYPEsfc':plot_STYPEsfc,
         'TCDCclm':plot_TCDCclm,
         'TCDChcl':plot_TCDChcl,
         'TCDCmcl':plot_TCDCmcl,
