@@ -36,17 +36,17 @@ nestedgrid = os.path.join(dir,'grid_spec.nest02.nc')   # name of file
 dom="CONUS"                                            # domain (can be CONUS, SC, etc.)
 proj="gnom"                                            # map projection
 varnames=[                                             # uncomment the desired variables below
-#          'ALBDOsfc',\
-#          'CPRATsfc',\
+          'ALBDOsfc',\
+          'CPRATsfc',\
           'PRATEsfc',\
-#          'DLWRFsfc',\
-#          'ULWRFsfc',\
-#          'DSWRFsfc',\
-#          'USWRFsfc',\
-#          'DSWRFtoa',\
-#          'USWRFtoa',\
-#          'ULWRFtoa',\
-#          'GFLUXsfc',\
+          'DLWRFsfc',\
+          'ULWRFsfc',\
+          'DSWRFsfc',\
+          'USWRFsfc',\
+          'DSWRFtoa',\
+          'USWRFtoa',\
+          'ULWRFtoa',\
+          'GFLUXsfc',\
 #          'HGTsfc',\
 #          'HPBLsfc',\
 #          'ICECsfc',\
