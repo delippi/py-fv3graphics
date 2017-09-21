@@ -42,11 +42,11 @@ proj="gnom"                                            # map projection
 varnames=[                                             # uncomment the desired variables below
 ####   fv_tracer.res.nest02.tile7.nc variables #####
 #          'sphum',\
-#          'liq_wat',\
-#          'o3mr',\
+          'liq_wat',\
+          'o3mr',\
 ####   fv_core.res.nest02.tile7.nc   variables ######
-          'u',\
-          'v',\
+#          'u',\
+#          'v',\
 #          'W',\
 #          'T',\
 #          'DZ',\
@@ -239,6 +239,7 @@ def plot_sphum(var_n):
 
 def plot_liq_wat(var_n):
     """liquid water content [g/kg]"""
+    exit("Need to fix plot_liq_wat")
     longname="liq_wat"; units="g/kg" #units="kg/kg *10-3"
     clevs=np.arange(0.,32.5,1)
     clevs=[0.00,0.03,0.05,0.25,0.25,1.,3.,4.,5.]
@@ -247,6 +248,7 @@ def plot_liq_wat(var_n):
 
 def plot_o3mr(var_n):
     """ozone mixing ratio [kg/kg]"""
+    exit("Need to fix plot_o3mr")
     longname="Ozone mixing ratio"; units="g/kg" #units="kg/kg *10-3"
     var_n=var_n*1000
     clevs=np.arange(0.,32.5,1)
@@ -277,6 +279,7 @@ def plot_W(var_n):
 
 def plot_DZ(var_n):
     """DZ [??]"""
+    exit("Need to fix plot_DZ")
     longname="DZ"; units="??"
     clevs= np.arange(0,10,1)
     cm=ncepy.ncl_t2m()
@@ -292,6 +295,7 @@ def plot_T(var_n):
 
 def plot_delp(var_n):
     """delp [??]"""
+    exit("Need to fix plot_delp")
     longname="??"; units="??"
     clevs= np.arange(0,10,1)
     cm=ncepy.ncl_t2m()
@@ -299,6 +303,7 @@ def plot_delp(var_n):
 
 def plot_phis(var_n):
     """incremental pressure on each level [Pa]"""
+    exit("Need to fix plot_phis")
     longname="incremental pressure on each level"; units="hPa"
     if(units=='hPa'): var_n=var_n*0.01
     clevs=np.arange(0,10,1)
