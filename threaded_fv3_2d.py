@@ -27,26 +27,43 @@ import pdb
 ######################   USER DEFINED SETTINGS    ############################################
 outputdir='/scratch4/NCEPDEV/meso/save/Donald.E.Lippi/FV3RDA/graphics_utils/'# output directory
 dir='/scratch4/NCEPDEV/meso/save/Donald.E.Lippi/data'  # directory containing your fv3nc files
-startplot=datetime.strptime('2017080700','%Y%m%d%H')   # start time
-#endplot=datetime.strptime('2017080700','%Y%m%d%H')     # end time (if start=end ==> 1 plot)
-hrs=0                                                  # hours to add to startplot
-endplot=startplot+timedelta(hours=hrs)                 # end time using hours
-nesteddata2d = os.path.join(dir,'nggps2d.nest02.nc')   # name of file
+#startplot=datetime.strptime('2017080700','%Y%m%d%H')  # start time
+startplot=datetime.strptime('2017092000','%Y%m%d%H')   # start time
+#endplot=datetime.strptime('2017080700','%Y%m%d%H')    # end time (if start=end --> 1 plot)
+hrs=0                                                  # number of hours from cycle time to plot
+endplot=startplot+timedelta(hours=hrs)                 # end time using hrs
+lev=40           # model level if data is 3D. If 63 vertical levs, [0 to 62] --> [top to bottom]
+nesteddata = os.path.join(dir,'fv_tracer.res.nest02.tile7.nc')   # name of file
+nesteddata = os.path.join(dir,'fv_core.res.nest02.tile7.nc')     # name of file
+#nesteddata = os.path.join(dir,'nggps2d.nest02.nc')    # name of file
 nestedgrid = os.path.join(dir,'grid_spec.nest02.nc')   # name of file
 dom="CONUS"                                            # domain (can be CONUS, SC, etc.)
 proj="gnom"                                            # map projection
 varnames=[                                             # uncomment the desired variables below
-          'ALBDOsfc',\
-          'CPRATsfc',\
-          'PRATEsfc',\
-          'DLWRFsfc',\
-          'ULWRFsfc',\
-          'DSWRFsfc',\
-          'USWRFsfc',\
-          'DSWRFtoa',\
-          'USWRFtoa',\
-          'ULWRFtoa',\
-          'GFLUXsfc',\
+####   fv_tracer.res.nest02.tile7.nc variables #####
+#          'sphum',\
+#          'liq_wat',\
+#          'o3mr',\
+####   fv_core.res.nest02.tile7.nc   variables ######
+          'u',\
+          'v',\
+#          'W',\
+#          'T',\
+#          'DZ',\
+#          'delp',\
+#          'phis',\
+####   nggps2d variabels #######
+#          'ALBDOsfc',\
+#          'CPRATsfc',\
+#          'PRATEsfc',\
+#          'DLWRFsfc',\
+#          'ULWRFsfc',\
+#          'DSWRFsfc',\
+#          'USWRFsfc',\
+#          'DSWRFtoa',\
+#          'USWRFtoa',\
+#          'ULWRFtoa',\
+#          'GFLUXsfc',\
 #          'HGTsfc',\
 #          'HPBLsfc',\
 #          'ICECsfc',\
@@ -111,9 +128,9 @@ m.drawmeridians(meridians,labels=[1,0,0,1])
 
 def mkplot(varname):
     print("mkplot - "+str(multiprocessing.current_process()))
-    fnd = Dataset(nesteddata2d,'r')
+    fnd = Dataset(nesteddata,'r')
     fng   = Dataset(nestedgrid,'r')
-    varnames2d=fnd.variables.keys()
+    #varnames2d=fnd.variables.keys()
 
     # Get the map navigation info from the the grid spec file
     # The variables 'grid_lon' and 'grid_lat' refer to the coordinates of the grid corners, which define the extents of the grid cell.
@@ -138,10 +155,14 @@ def mkplot(varname):
     lons=grid_lont_n; lats=grid_latt_n
     lons[lons>180]-=360 # grid_lont_n is in units of 0-360 deg. We need -180 to 180 for maskoceans.
 
-    times = fnd.variables['time'][:]
-    cdftime = utime(getattr(fnd.variables['time'],'units'))
-    # Grab the cycledate
-    cycledate=roundTime(cdftime.num2date(times[0]),roundTo=60.*60.)
+     
+    try:
+       times = fnd.variables['time'][:]
+       cdftime = utime(getattr(fnd.variables['time'],'units'))
+       cycledate=roundTime(cdftime.num2date(times[0]),roundTo=60.*60.)
+    except KeyError:
+       times = fnd.variables['Time'][:]
+       cycledate = startplot
 
     #  Map/figure has been set up here (bulk of the work), save axes instances for
     #     use again later
@@ -151,31 +172,38 @@ def mkplot(varname):
     #x_n,y_n = m(grid_lon_n[:,:],grid_lat_n[:,:])
     xt_n,yt_n = m(grid_lont_n[:,:],grid_latt_n[:,:])
 
-    cycledate=roundTime(cdftime.num2date(times[0]),roundTo=60.*60.)
     dispatcher=plot_Dictionary()
     for t,time in enumerate(times):
         # Just to get a nicely formatted date for writing out
-        datestr =roundTime(cdftime.num2date(time),roundTo=60.*60.)
+        try: datestr =roundTime(cdftime.num2date(time),roundTo=60.*60.)
+        except UnboundLocalError: datestr = cycledate
         outdate=datestr.strftime('%Y%m%d%H')
         diff=(datestr-cycledate)
         fhr=int(diff.days*24.+diff.seconds/3600.)
         if datestr>=startplot and datestr<=endplot:
             # Clear off old plottables but keep all the map info
             ncepy.clear_plotables(ax,keep_ax_lst,fig)
-            var_n=fnd.variables[varname][t,:,:]
+
+            var_n=fnd.variables[varname][t] # Read 2d and 3d fields
+            print(varname+': '+str(np.shape(var_n)))
+            NDim=len(np.shape(var_n))       # Figure out if 2d or 3d
+            if(NDim==3): var_n=var_n[lev]; figlev='_'+str(lev)  # If 3d, use lev to get 2d
+            else: figlev=''
+
             try: # Doing it this way means we only have to supply a corresponding definition for cm,clevs,etc.
                print(str(varname)+": Plotting forecast hour {:s} valid {:s}Z".format(str(fhr).zfill(3),outdate))
                function=dispatcher[varname]
                var_n,clevs,cm,units,longname=function(var_n)
             except KeyError:
                raise ValueError("invalid varname:"+varname)
+
             norm = matplotlib.colors.BoundaryNorm(clevs, cm.N)
             cs = m.pcolormesh(xt_n,yt_n,var_n,cmap=cm,norm=norm,vmin=clevs[0],vmax=clevs[-1])
             cbar = m.colorbar(cs,location='bottom',pad="5%",extend="both",ticks=clevs)
             cbar.ax.tick_params(labelsize=8.5)
             cbar.set_label(varname+": "+longname+"  ["+str(units)+"]")
             plt.title(outdate+"    FHR "+str(fhr).zfill(3),loc='left',fontsize=10,)
-            plt.savefig(outputdir+ varname + '_%03d.png' % (fhr),dpi=125, bbox_inches='tight')
+            plt.savefig(outputdir+varname+figlev+'_'+'%03d'% (fhr) +'_v'+outdate+'Z.png',dpi=125, bbox_inches='tight')
 
     plt.close('all')
 
@@ -199,6 +227,86 @@ def gemplot(clist):
     return cm
 
 ############### plot_ functions ###########################################
+
+#-------------- tracer   -------------------------------------------------- 
+def plot_sphum(var_n):
+    """specific humidity [kg/kg]"""
+    longname="specific humidity"; units="g/kg" #units="kg/kg *10-3"
+    var_n=var_n*1000
+    clevs=np.arange(0.,32.5,1)
+    cm=ncepy.ncl_t2m()
+    return(var_n,clevs,cm,units,longname)
+
+def plot_liq_wat(var_n):
+    """liquid water content [g/kg]"""
+    longname="liq_wat"; units="g/kg" #units="kg/kg *10-3"
+    clevs=np.arange(0.,32.5,1)
+    clevs=[0.00,0.03,0.05,0.25,0.25,1.,3.,4.,5.]
+    cm=ncepy.ncl_t2m()
+    return(var_n,clevs,cm,units,longname)
+
+def plot_o3mr(var_n):
+    """ozone mixing ratio [kg/kg]"""
+    longname="Ozone mixing ratio"; units="g/kg" #units="kg/kg *10-3"
+    var_n=var_n*1000
+    clevs=np.arange(0.,32.5,1)
+    cm=ncepy.ncl_t2m()
+    return(var_n,clevs,cm,units,longname)
+
+#-------------- core    -------------------------------------------------- 
+def plot_u(var_n):
+    """zonal wind [m/s]"""
+    longname="zonal wind"; units="m/s"
+    clevs=np.arange(-20,20.5,2)
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
+
+def plot_v(var_n):
+    """meridional wind [m/s]"""
+    longname="meridional wind"; units="m/s"
+    clevs=np.arange(-20,20.5,2)
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
+
+def plot_W(var_n):
+    """vertical velocity [m/s]"""
+    longname="vertical velocity"; units="m/s"
+    clevs=np.arange(-20,20.5,2)
+    cm=plt.get_cmap(name='RdBu_r')
+    return(var_n,clevs,cm,units,longname)
+
+def plot_DZ(var_n):
+    """DZ [??]"""
+    longname="DZ"; units="??"
+    clevs= np.arange(0,10,1)
+    cm=ncepy.ncl_t2m()
+    return(var_n,clevs,cm,units,longname)
+
+def plot_T(var_n):
+    """temperature [K]"""
+    longname="temperature"; units="F"
+    if(units=="F"): var_n=ncepy.Kelvin2F(var_n) # [F]
+    clevs= np.arange(-36.,104.,4)
+    cm=ncepy.ncl_t2m()
+    return(var_n,clevs,cm,units,longname)
+
+def plot_delp(var_n):
+    """delp [??]"""
+    longname="??"; units="??"
+    clevs= np.arange(0,10,1)
+    cm=ncepy.ncl_t2m()
+    return(var_n,clevs,cm,units,longname)
+
+def plot_phis(var_n):
+    """incremental pressure on each level [Pa]"""
+    longname="incremental pressure on each level"; units="hPa"
+    if(units=='hPa'): var_n=var_n*0.01
+    clevs=np.arange(0,10,1)
+    cm=ncepy.ncl_t2m()
+    return(var_n,clevs,cm,units,longname)
+
+
+#-------------- nggps2d -------------------------------------------------- 
 def plot_ALBDOsfc(var_n):
     """surface albedo (%)"""
     longname="surface albedo"; units="%"
@@ -336,8 +444,8 @@ def plot_SHTFLsfc(var_n):
 
 def plot_PRESsfc(var_n): # done
     """surface pressure [Pa]"""
-    longname="surface pressure"; units="Pa"
-    var_n=var_n*0.01
+    longname="surface pressure"; units="hPa"
+    if(units=='hPa'): var_n=var_n*0.01
     var_n=scipy.ndimage.gaussian_filter(var_n, 2) # first pass
     var_n=scipy.ndimage.gaussian_filter(var_n, 2) # second pass
     clevs=np.arange(950.,1050.,4.)
@@ -605,6 +713,19 @@ def plot_Dictionary():
        appropriate variable specific name, units, clevs, clist, and colormap for plotting.
     """
     dispatcher={  
+# tracer
+        'sphum':plot_sphum,
+        'liq_wat':plot_liq_wat,
+        'o3mr':plot_o3mr,
+# core
+        'u':plot_u,
+        'v':plot_v,
+        'W':plot_W,
+        'T':plot_T,
+        'DZ':plot_DZ,
+        'delp':plot_delp,
+        'phis':plot_phis,
+# nggps 2d
         'ALBDOsfc':plot_ALBDOsfc,
         'CPRATsfc':plot_CPRATsfc,
         'PRATEsfc':plot_PRATEsfc,
@@ -659,7 +780,8 @@ def plot_Dictionary():
 if __name__ == '__main__':
     pool=multiprocessing.Pool(len(varnames)) # one processor per variable
     #pool=multiprocessing.Pool(8) # 8 processors for all variables. Just a little slower.
-    pool.map(mkplot,varnames) 
+    #pool.map(mkplot,varnames) 
+    mkplot(varnames[0])
     toc=timer()
     time=toc-tic
     hrs=int(time/3600)
