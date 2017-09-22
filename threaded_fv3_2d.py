@@ -32,18 +32,18 @@ startplot=datetime.strptime('2017092000','%Y%m%d%H')   # start time
 #endplot=datetime.strptime('2017080700','%Y%m%d%H')    # end time (if start=end --> 1 plot)
 hrs=0                                                  # number of hours from cycle time to plot
 endplot=startplot+timedelta(hours=hrs)                 # end time using hrs
-lev=40           # model level if data is 3D. If 63 vertical levs, [0 to 62] --> [top to bottom]
+lev=62           # model level if data is 3D. If 63 vertical levs, [0 to 62] --> [top to bottom]
 nesteddata = os.path.join(dir,'fv_tracer.res.nest02.tile7.nc')   # name of file
-nesteddata = os.path.join(dir,'fv_core.res.nest02.tile7.nc')     # name of file
+#nesteddata = os.path.join(dir,'fv_core.res.nest02.tile7.nc')     # name of file
 #nesteddata = os.path.join(dir,'nggps2d.nest02.nc')    # name of file
 nestedgrid = os.path.join(dir,'grid_spec.nest02.nc')   # name of file
 dom="CONUS"                                            # domain (can be CONUS, SC, etc.)
 proj="gnom"                                            # map projection
 varnames=[                                             # uncomment the desired variables below
 ####   fv_tracer.res.nest02.tile7.nc variables #####
-#          'sphum',\
-          'liq_wat',\
-          'o3mr',\
+          'sphum',\
+#          'liq_wat',\
+#          'o3mr',\
 ####   fv_core.res.nest02.tile7.nc   variables ######
 #          'u',\
 #          'v',\
@@ -785,8 +785,8 @@ def plot_Dictionary():
 if __name__ == '__main__':
     pool=multiprocessing.Pool(len(varnames)) # one processor per variable
     #pool=multiprocessing.Pool(8) # 8 processors for all variables. Just a little slower.
-    #pool.map(mkplot,varnames) 
-    mkplot(varnames[0])
+    pool.map(mkplot,varnames) 
+    #mkplot(varnames[0])
     toc=timer()
     time=toc-tic
     hrs=int(time/3600)
