@@ -32,7 +32,9 @@ startplot=datetime.strptime('2017092000','%Y%m%d%H')   # start time
 #endplot=datetime.strptime('2017080700','%Y%m%d%H')    # end time (if start=end --> 1 plot)
 hrs=0                                                  # number of hours from cycle time to plot
 endplot=startplot+timedelta(hours=hrs)                 # end time using hrs
-lev=62           # model level if data is 3D. If 63 vertical levs, [0 to 62] --> [top to bottom]
+levs=[10,20,30,40,50,60]                               # actual FV3 model level. ignore rules of python.
+#levs=np.arange(1,64,1) #plots level 1 to 63 by 1      # 1=model top; 63=model bottom.
+#levs=np.arange(63,0,-1)#plots level 63 to 1 by 1      # levs=['all'] will plot all levels.
 nesteddata = os.path.join(dir,'fv_tracer.res.nest02.tile7.nc')   # name of file
 #nesteddata = os.path.join(dir,'fv_core.res.nest02.tile7.nc')     # name of file
 #nesteddata = os.path.join(dir,'nggps2d.nest02.nc')    # name of file
@@ -173,37 +175,48 @@ def mkplot(varname):
     xt_n,yt_n = m(grid_lont_n[:,:],grid_latt_n[:,:])
 
     dispatcher=plot_Dictionary()
-    for t,time in enumerate(times):
-        # Just to get a nicely formatted date for writing out
-        try: datestr =roundTime(cdftime.num2date(time),roundTo=60.*60.)
-        except UnboundLocalError: datestr = cycledate
-        outdate=datestr.strftime('%Y%m%d%H')
-        diff=(datestr-cycledate)
-        fhr=int(diff.days*24.+diff.seconds/3600.)
-        if datestr>=startplot and datestr<=endplot:
-            # Clear off old plottables but keep all the map info
-            ncepy.clear_plotables(ax,keep_ax_lst,fig)
+    if(levs[0]==63 or levs[0]=='all'): levels=np.arange(63,0,-1)
+    else: levels=levs
+    break_levlevels=False
+    for lev in levels:
+        for t,time in enumerate(times):
+            # Just to get a nicely formatted date for writing out
+            try: datestr =roundTime(cdftime.num2date(time),roundTo=60.*60.)
+            except UnboundLocalError: datestr = cycledate
+            outdate=datestr.strftime('%Y%m%d%H')
+            diff=(datestr-cycledate)
+            fhr=int(diff.days*24.+diff.seconds/3600.)
+            if datestr>=startplot and datestr<=endplot:
+                # Clear off old plottables but keep all the map info
+                ncepy.clear_plotables(ax,keep_ax_lst,fig)
 
-            var_n=fnd.variables[varname][t] # Read 2d and 3d fields
-            print(varname+': '+str(np.shape(var_n)))
-            NDim=len(np.shape(var_n))       # Figure out if 2d or 3d
-            if(NDim==3): var_n=var_n[lev]; figlev='_'+str(lev)  # If 3d, use lev to get 2d
-            else: figlev=''
+                try: var_n=fnd.variables[varname][t] # Read 2d and 3d fields
+                except KeyError: exit("Double check what file you are reading in and the variable(s) you are plotting...")
+                print(varname+': '+str(np.shape(var_n)))
+                NDim=len(np.shape(var_n))       # Figure out if 2d or 3d
+                if(NDim==3):
+                    var_n=var_n[lev-1]  #in python, indicies start at 0.
+                    figlev='_lev'+str(lev).zfill(2)  # If 3d, use lev to get 2d
+                    figlevtitle="    LEV "+str(lev).zfill(2)
+                else: figlev=''; figlevtitle=""; break_levlevels=True
 
-            try: # Doing it this way means we only have to supply a corresponding definition for cm,clevs,etc.
-               print(str(varname)+": Plotting forecast hour {:s} valid {:s}Z".format(str(fhr).zfill(3),outdate))
-               function=dispatcher[varname]
-               var_n,clevs,cm,units,longname=function(var_n)
-            except KeyError:
-               raise ValueError("invalid varname:"+varname)
-
-            norm = matplotlib.colors.BoundaryNorm(clevs, cm.N)
-            cs = m.pcolormesh(xt_n,yt_n,var_n,cmap=cm,norm=norm,vmin=clevs[0],vmax=clevs[-1])
-            cbar = m.colorbar(cs,location='bottom',pad="5%",extend="both",ticks=clevs)
-            cbar.ax.tick_params(labelsize=8.5)
-            cbar.set_label(varname+": "+longname+"  ["+str(units)+"]")
-            plt.title(outdate+"    FHR "+str(fhr).zfill(3),loc='left',fontsize=10,)
-            plt.savefig(outputdir+varname+figlev+'_'+'%03d'% (fhr) +'_v'+outdate+'Z.png',dpi=125, bbox_inches='tight')
+                try: # Doing it this way means we only have to supply a corresponding definition for cm,clevs,etc.
+                   if(NDim==3): print(str(varname)+": Plotting forecast hour {:s} valid {:s}Z at lev={:s}".format(str(fhr).zfill(3),outdate, str(lev).zfill(2)))
+                   else:        print(str(varname)+": Plotting forecast hour {:s} valid {:s}Z".format(str(fhr).zfill(3),outdate))
+                   function=dispatcher[varname]
+                   var_n,clevs,cm,units,longname=function(var_n)
+                except KeyError:
+                   raise ValueError("invalid varname:"+varname)
+    
+                norm = matplotlib.colors.BoundaryNorm(clevs, cm.N)
+                cs = m.pcolormesh(xt_n,yt_n,var_n,cmap=cm,norm=norm,vmin=clevs[0],vmax=clevs[-1])
+                cbar = m.colorbar(cs,location='bottom',pad="5%",extend="both",ticks=clevs)
+                cbar.ax.tick_params(labelsize=8.5)
+                cbar.set_label(varname+": "+longname+"  ["+str(units)+"]")
+                plt.title(outdate+"    FHR "+str(fhr).zfill(3)+figlevtitle,loc='left',fontsize=10,)
+                plt.savefig(outputdir+varname+'_fhr'+'%03d'% (fhr) +'_v'+outdate+'Z'+figlev+'.png',\
+                            dpi=125, bbox_inches='tight')
+        if(break_levlevels): break #break out of lev levels loop.  
 
     plt.close('all')
 
