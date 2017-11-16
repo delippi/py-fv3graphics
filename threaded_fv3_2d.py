@@ -15,6 +15,7 @@ import matplotlib
 from mpl_toolkits.basemap import Basemap, cm, maskoceans
 import multiprocessing
 import numpy as np
+import math
 from netCDF4 import Dataset
 from netcdftime import utime
 from datetime   import datetime,timedelta
@@ -26,29 +27,28 @@ import pdb
 
 ######################   USER DEFINED SETTINGS    ############################################
 outputdir='/scratch4/NCEPDEV/meso/save/Donald.E.Lippi/FV3RDA/graphics_utils/'# output directory
-dir='/scratch4/NCEPDEV/meso/save/Donald.E.Lippi/data'  # directory containing your fv3nc files
-#startplot=datetime.strptime('2017080700','%Y%m%d%H')  # start time
-startplot=datetime.strptime('2017092000','%Y%m%d%H')   # start time
-#endplot=datetime.strptime('2017080700','%Y%m%d%H')    # end time (if start=end --> 1 plot)
-hrs=0                                                  # number of hours from cycle time to plot
-endplot=startplot+timedelta(hours=hrs)                 # end time using hrs
-levs=[10,20,30,40,50,60]                               # actual FV3 model level. ignore rules of python.
-#levs=np.arange(1,64,1) #plots level 1 to 63 by 1      # 1=model top; 63=model bottom.
-#levs=np.arange(63,0,-1)#plots level 63 to 1 by 1      # levs=['all'] will plot all levels.
-nesteddata = os.path.join(dir,'fv_tracer.res.nest02.tile7.nc')   # name of file
-#nesteddata = os.path.join(dir,'fv_core.res.nest02.tile7.nc')     # name of file
-#nesteddata = os.path.join(dir,'nggps2d.nest02.nc')    # name of file
-nestedgrid = os.path.join(dir,'grid_spec.nest02.nc')   # name of file
-dom="CONUS"                                            # domain (can be CONUS, SC, etc.)
+datadir='/scratch4/NCEPDEV/meso/noscrub/Eric.Aligo/work_FV3_nest_C768_2017101500_GFDL_MP_REFL/'
+startplot=datetime.strptime('2017101506','%Y%m%d%H')   # start time
+nhrs=6                                                 # number of plots to generate plus one for the start time.
+endplot=startplot+timedelta(hours=nhrs)                # end time. 
+levs=[50]                                              # FV3 model level if data is 3D, otherwise ignored.
+                                                       # 1=model top; 63=model bottom.
+                                                       # levs=['all'] will plot all levels.
+#nesteddata = os.path.join(datadir,'refl2D.nest02.nc')     # name of file
+nesteddata = os.path.join(datadir,'maxmin2D.nest02.nc')     # name of file
+nestedgrid = os.path.join(datadir,'grid_spec.nest02.nc')  # name of file
 proj="gnom"                                            # map projection
+dom="CONUS"                                            # domain (CONUS,NW,NWRFC,NC,NE,SC,SE,SW,MIDATL
+                                                       # Great_Lakes,AK,NAK,SAK,SWAK,SEAK,PR,GUAM,HI,
+                                                       # POWER,OK,LAKE_VICTORIA,AFRICA,MEDFORD))
 varnames=[                                             # uncomment the desired variables below
 ####   fv_tracer.res.nest02.tile7.nc variables #####
-          'sphum',\
+#          'sphum',\
 #          'liq_wat',\
 #          'o3mr',\
 ####   fv_core.res.nest02.tile7.nc   variables ######
-#          'u',\
-#          'v',\
+#          'u',\  #doesn't work
+#          'v',\  #doesn't work
 #          'W',\
 #          'T',\
 #          'DZ',\
@@ -103,8 +103,19 @@ varnames=[                                             # uncomment the desired v
 #          'TCDChcl',\
 #          'TCDCmcl',\
 #          'TCDClcl',\
+####   refl2D.nest02.nc   variables ######
+#          'REFC',\
+#          'REFD1km',\
+#          'REFD4km',\
+#          'REFDm10C',\
+#          'RETOP',\
+####   maxmin2D.nest02.nc   variables ######
+          'MXUPHL2_5km_max',\
+          'MNUPHL2_5km_min',\
+          'MAXREFC_max',\
+          'MAXREF_1km_max',\
          ]
-######################   USER DEFINED SETTINGS    ############################################
+######################   END OF USER DEFINED SETTINGS    ########################################
 
 # Create the basemap
 # create figure and axes instances
@@ -164,7 +175,11 @@ def mkplot(varname):
        cycledate=roundTime(cdftime.num2date(times[0]),roundTo=60.*60.)
     except KeyError:
        times = fnd.variables['Time'][:]
-       cycledate = startplot
+       #cycledate = startplot
+       print("How to get time from fv_tracer.res.nest02.*nc and fv_core.res.nest02.*nc???")
+       exit("Not able to plot from these files yet.")
+    
+    #print("There are %d time levels in the file %s" % (len(times),str(nesteddata)))
 
     #  Map/figure has been set up here (bulk of the work), save axes instances for
     #     use again later
@@ -192,7 +207,7 @@ def mkplot(varname):
 
                 try: var_n=fnd.variables[varname][t] # Read 2d and 3d fields
                 except KeyError: exit("Double check what file you are reading in and the variable(s) you are plotting...")
-                print(varname+': '+str(np.shape(var_n)))
+                #print(varname+': '+str(np.shape(var_n)))
                 NDim=len(np.shape(var_n))       # Figure out if 2d or 3d
                 if(NDim==3):
                     var_n=var_n[lev-1]  #in python, indicies start at 0.
@@ -217,6 +232,7 @@ def mkplot(varname):
                 plt.savefig(outputdir+varname+'_fhr'+'%03d'% (fhr) +'_v'+outdate+'Z'+figlev+'.png',\
                             dpi=125, bbox_inches='tight')
         if(break_levlevels): break #break out of lev levels loop.  
+
 
     plt.close('all')
 
@@ -285,7 +301,8 @@ def plot_v(var_n):
 
 def plot_W(var_n):
     """vertical velocity [m/s]"""
-    longname="vertical velocity"; units="m/s"
+    longname="vertical velocity"; units="cm/s"
+    if(units=="cm/s"): var_n=var_n*10
     clevs=np.arange(-20,20.5,2)
     cm=plt.get_cmap(name='RdBu_r')
     return(var_n,clevs,cm,units,longname)
@@ -716,9 +733,79 @@ def plot_TCDClcl(var_n):
     """low cloud level total cloud cover [%]"""
     longname="low cloud level total cloud cover"; units="%"
     clevs=[0,10,20,30,40,50,60,70,75,80,85,90,95,100] # percent
-    clist=[0,30,29,27,24,4,23,3,5,19,17,7,2]
+    clist=[ 0,30,29,27,24, 4,23, 3, 5,19,17, 7, 2]
     cm=gemplot(clist)
     return(var_n,clevs,cm,units,longname) 
+
+def plot_REFC(var_n):
+    """Stoelinga simulated maximum (composite) reflectivity [dbz]"""
+    longname="Stoelinga simulated maximum (composite) reflectivity"; units="dbz"
+    clevs=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75] # dbz 
+    cm=ncepy.mrms_radarmap()
+    return(var_n,clevs,cm,units,longname) 
+
+def plot_REFD1km(var_n):
+    """Stoelinga simulated base (1 km AGL) reflectivity"""
+    longname="Stoelinga simulated base (1 km AGL) reflectivity"; units="dbz"
+    clevs=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75] # dbz 
+    cm=ncepy.mrms_radarmap()
+    return(var_n,clevs,cm,units,longname) 
+
+def plot_REFD4km(var_n):
+    """Stoelinga simulated base reflectivity"""
+    longname="Stoelinga simulated base reflectivity"; units="dbz"
+    clevs=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75] # dbz 
+    cm=ncepy.mrms_radarmap()
+    return(var_n,clevs,cm,units,longname) 
+
+def plot_REFDm10C(var_n):
+    """Reflectivity at -10C level"""
+    longname="Reflectivity at -10C level"; units="dbz"
+    clevs=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75] # dbz 
+    cm=ncepy.mrms_radarmap()
+    return(var_n,clevs,cm,units,longname) 
+
+def plot_RETOP(var_n):
+    """Echo top ( <= 18.5 dBz ) [m]"""
+    longname="Echo top ( <= 18.5 dBz )"; units="kft"
+    if(units=="kft"): var_n = var_n*304.8 #meters to kft 
+    clevs=[0, 4, 7,10,13,16,19,22,25,28,31,34,37,40,43,46,49] # kft
+    clist=[ 0,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16]
+    cm=gemplot(clist)
+    return(var_n,clevs,cm,units,longname) 
+
+def plot_MXUPHL2_5km(var_n):
+    """2-5 km Updraft Helicity (max)"""
+    longname="2-5 km Updraft Helicity (max)"; units="m/s**2"
+    clevs=[0,25,50,75,100,150,200,250,300,400,500,600,700,800] # m/s**2 
+    clist=[ 0, 4, 25,26,27, 23, 22, 21, 20, 18, 17, 15, 7 ]
+    cm=gemplot(clist)
+    return(var_n,clevs,cm,units,longname) 
+
+def plot_MNUPHL2_5km(var_n):
+    """2-5 km Updraft Helicity (min)"""
+    longname="2-5 km Updraft Helicity (min)"; units="m/s**2"
+    clevs=[0,25,50,75,100,150,200,250,300,400,500,600,700,800] # m/s**2 
+    clist=[ 0, 4, 25,26,27, 23, 22, 21, 20, 18, 17, 15, 7 ]
+    cm=gemplot(clist)
+    return(var_n,clevs,cm,units,longname) 
+
+
+def plot_MAXREFC(var_n):
+    """Stoelinga simulated maximum (composite) reflectivity"""
+    longname="Stoelinga simulated maximum (composite) reflectivity"; units="dbz"
+    clevs=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75] # dbz 
+    cm=ncepy.mrms_radarmap()
+    return(var_n,clevs,cm,units,longname) 
+
+def plot_MAXREF_1km(var_n):
+    """Stoelinga simulated maximum (composite) reflectivity"""
+    longname="Stoelinga simulated maximum (composite) reflectivity"; units="dbz"
+    clevs=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75] # dbz 
+    cm=ncepy.mrms_radarmap()
+    return(var_n,clevs,cm,units,longname) 
+
+
 
 ############### Dictionary for plot_function calls ###################################
 def plot_Dictionary():
@@ -792,12 +879,21 @@ def plot_Dictionary():
         'TCDChcl':plot_TCDChcl,
         'TCDCmcl':plot_TCDCmcl,
         'TCDClcl':plot_TCDClcl,
+        'REFC':plot_REFC,
+        'REFD1km':plot_REFD1km,
+        'REFD4km':plot_REFD4km,
+        'REFDm10C':plot_REFDm10C,
+        'RETOP':plot_RETOP,
+        'MXUPHL2_5km_max':plot_MXUPHL2_5km,
+        'MNUPHL2_5km_min':plot_MNUPHL2_5km,
+        'MAXREFC_max':plot_MAXREFC,
+        'MAXREF_1km_max':plot_MAXREF_1km,
                }
     return dispatcher  
 
 if __name__ == '__main__':
-    pool=multiprocessing.Pool(len(varnames)) # one processor per variable
-    #pool=multiprocessing.Pool(8) # 8 processors for all variables. Just a little slower.
+    #pool=multiprocessing.Pool(len(varnames)) # one processor per variable
+    pool=multiprocessing.Pool(8) # 8 processors for all variables. Just a little slower.
     pool.map(mkplot,varnames) 
     #mkplot(varnames[0])
     toc=timer()
