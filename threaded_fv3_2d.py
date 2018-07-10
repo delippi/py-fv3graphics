@@ -16,6 +16,8 @@ from mpl_toolkits.basemap import Basemap, cm, maskoceans
 import multiprocessing
 import numpy as np
 import math
+#import pynemsio
+#import pygrib
 from netCDF4 import Dataset
 from netcdftime import utime
 from datetime   import datetime,timedelta
@@ -24,98 +26,63 @@ import ncepy
 #Necessary to generate figs when not running an Xserver (e.g. via PBS)
 plt.switch_backend('agg')
 import pdb
+import subprocess
+import os
+
+def get_PDY_HH(date):
+    ps=subprocess.Popen(('echo',date),stdout=subprocess.PIPE)
+    PDY=subprocess.check_output(('cut','-c','1-8'),stdin=ps.stdout).strip()
+    ps=subprocess.Popen(('echo',date),stdout=subprocess.PIPE)
+    HH=subprocess.check_output(('cut','-c','9-10'),stdin=ps.stdout).strip()
+    return PDY,HH
 
 ######################   USER DEFINED SETTINGS    ############################################
-outputdir='/scratch4/NCEPDEV/meso/save/Donald.E.Lippi/FV3RDA/graphics_utils/'# output directory
-datadir='/scratch4/NCEPDEV/meso/noscrub/Eric.Aligo/work_FV3_nest_C768_2017101500_GFDL_MP_REFL/'
-startplot=datetime.strptime('2017101506','%Y%m%d%H')   # start time
+date='2018050300'; PDY,HH=get_PDY_HH(date)
+tmpdir='stmp'
+exp='DAS_exp_001_'+date
+#exp='NATURE'
+
+outputdir='/gpfs/hps3/emc/meso/noscrub/Donald.E.Lippi/py-fv3graphics/figs/'# output directory
+#datadir='/gpfs/hps2/'+tmpdir+'/Donald.E.Lippi/fv3gfs_dl2rw_'+exp+'/gfs.'+PDY+'/'+HH
+datadir='/gpfs/hps2/stmp/Donald.E.Lippi/RUNDIRS/fv3gfs_dl2rw_DAS_exp_001_2018050218/2018050300/gfs/anal'
+#datadir='/gpfs/hps2/ptmp/Donald.E.Lippi/FV3ICS/'+date+'/C768/control/INPUT/'
+startplot=datetime.strptime(date,'%Y%m%d%H')   # start time
 nhrs=6                                                 # number of plots to generate plus one for the start time.
 endplot=startplot+timedelta(hours=nhrs)                # end time. 
 levs=[50]                                              # FV3 model level if data is 3D, otherwise ignored.
                                                        # 1=model top; 63=model bottom.
+
                                                        # levs=['all'] will plot all levels.
-#nesteddata = os.path.join(datadir,'refl2D.nest02.nc')     # name of file
-nesteddata = os.path.join(datadir,'maxmin2D.nest02.nc')     # name of file
-nestedgrid = os.path.join(datadir,'grid_spec.nest02.nc')  # name of file
+#nesteddata = os.path.join(datadir,'refl2D.nest02.nc') # name of file
+#nesteddata = os.path.join(datadir,'gfs_data.tile1.nc') # name of file
+#nestedgrid = os.path.join(datadir,'gfs_ctrl.nc')       # name of file
 proj="gnom"                                            # map projection
-dom="CONUS"                                            # domain (CONUS,NW,NWRFC,NC,NE,SC,SE,SW,MIDATL
+dom="SC"                                               # domain (CONUS,NW,NWRFC,NC,NE,SC,SE,SW,MIDATL
                                                        # Great_Lakes,AK,NAK,SAK,SWAK,SEAK,PR,GUAM,HI,
                                                        # POWER,OK,LAKE_VICTORIA,AFRICA,MEDFORD))
 varnames=[                                             # uncomment the desired variables below
-####   fv_tracer.res.nest02.tile7.nc variables #####
-#          'sphum',\
-#          'liq_wat',\
-#          'o3mr',\
-####   fv_core.res.nest02.tile7.nc   variables ######
-#          'u',\  #doesn't work
-#          'v',\  #doesn't work
-#          'W',\
-#          'T',\
-#          'DZ',\
-#          'delp',\
-#          'phis',\
-####   nggps2d variabels #######
-#          'ALBDOsfc',\
-#          'CPRATsfc',\
-#          'PRATEsfc',\
-#          'DLWRFsfc',\
-#          'ULWRFsfc',\
-#          'DSWRFsfc',\
-#          'USWRFsfc',\
-#          'DSWRFtoa',\
-#          'USWRFtoa',\
-#          'ULWRFtoa',\
-#          'GFLUXsfc',\
-#          'HGTsfc',\
-#          'HPBLsfc',\
-#          'ICECsfc',\
-#          'SLMSKsfc',\
-#          'LHTFLsfc',\
-#          'SHTFLsfc',\
-#          'PRESsfc',\
-#          'PWATclm',\
-#          'SOILM',\
-#          'SOILW1',\
-#          'SOILW2',\
-#          'SOILW3',\
-#          'SOILW4',\
-#          'SPFH2m',\
-#          'SOILT1',\
-#          'SOILT2',\
-#          'SOILT3',\
-#          'SOILT4',\
-#          'TMP2m',\
-#          'TMPsfc',\
-#          'UGWDsfc',\
-#          'VGWDsfc',\
-#          'UFLXsfc',\
-#          'VFLXsfc',\
-#          'UGRD10m',\
-#          'VGRD10m',\
-#          'WEASDsfc',\
-#          'SNODsfc',\
-#          'ZORLsfc',\
-#          'VFRACsfc',\
-#          'F10Msfc',\
-#          'VTYPEsfc',\
-#          'STYPEsfc',\
-#          'TCDCclm',\
-#          'TCDChcl',\
-#          'TCDCmcl',\
-#          'TCDClcl',\
-####   refl2D.nest02.nc   variables ######
-#          'REFC',\
-#          'REFD1km',\
-#          'REFD4km',\
-#          'REFDm10C',\
-#          'RETOP',\
-####   maxmin2D.nest02.nc   variables ######
-          'MXUPHL2_5km_max',\
-          'MNUPHL2_5km_min',\
-          'MAXREFC_max',\
-          'MAXREF_1km_max',\
+          'REFC',\
+#          'MSL',\
+#          'SRHL0_1km_max',\
+#          'SRHL0_3km_max',\
+#          'VUSHR0-6000',\
+#          'VVSHR0-6000',\
+#          'CAPEsfc',\
+#          'CAPE18000-0',\
+#          'CAPE9000-0',\
+#          'CAPE25500-0',\
+#          'MXUPHL2_5km_max',\
+#          'MNUPHL2_5km_min',\
+#          'MAXREFC_max',\
+#          'MAXREF_1km_max',\
+
          ]
 ######################   END OF USER DEFINED SETTINGS    ########################################
+#nesteddata = os.path.join(datadir,'gfs.t00z.master.grb2f'+str(nhrs).zfill(3))
+#nesteddata = os.path.join(datadir,'gfs.t00z.master.grb2f003')
+nesteddata = os.path.join(datadir,'atmanl_mem001')
+print(nesteddata)
+#nesteddata = os.path.join(datadir,'gfs.t00z.atmf006.nemsio'); file_type='NEMSIO'
 
 # Create the basemap
 # create figure and axes instances
@@ -139,36 +106,15 @@ m.drawparallels(parallels,labels=[1,0,0,1])
 m.drawmeridians(meridians,labels=[1,0,0,1])
 #m.drawcounties(linewidth=0.2, color='k')
 
-def mkplot(varname):
-    print("mkplot - "+str(multiprocessing.current_process()))
+def NETCDF_read(nesteddata):
     fnd = Dataset(nesteddata,'r')
     fng   = Dataset(nestedgrid,'r')
     #varnames2d=fnd.variables.keys()
-
-    # Get the map navigation info from the the grid spec file
-    # The variables 'grid_lon' and 'grid_lat' refer to the coordinates of the grid corners, which define the extents of the grid cell.
-    # The cell centroids, or 'T-cells' are defined in 'grid_lont' and 'grid_latt'.
-    #   Which set of coordinates you want to use depend on the sort of plot you want to make:
-    #   a contour plot should use grid_lont and grid_latt, the cell centroids, but a color fill plot, like pcolor or grfill,
-    #   should use the grid corners in grid_lon and grid_lat.
-
-    # The natural definition for the grid, defined by the npx and npy variables in the input namelist,
-    # is the number of grid corners per grid face. The number of cells in a grid face is then npx-1 and npy-1.
-    # So a c768 grid will have npx = npy = 769.
-
-    # The winds in the history files are re-gridded to cell centers and then rotated to be the zonal and meridional winds.
-    #  You do not need to do any rotation to plot the grid vectors.
-
-    #grid_lon_n  = fng.variables['grid_lon'][:,:]
-    #grid_lat_n  = fng.variables['grid_lat'][:,:]
-
     grid_lont_n  = fng.variables['grid_lont'][:,:]
     grid_latt_n  = fng.variables['grid_latt'][:,:]
     global lons,lats
     lons=grid_lont_n; lats=grid_latt_n
     lons[lons>180]-=360 # grid_lont_n is in units of 0-360 deg. We need -180 to 180 for maskoceans.
-
-     
     try:
        times = fnd.variables['time'][:]
        cdftime = utime(getattr(fnd.variables['time'],'units'))
@@ -178,16 +124,20 @@ def mkplot(varname):
        #cycledate = startplot
        print("How to get time from fv_tracer.res.nest02.*nc and fv_core.res.nest02.*nc???")
        exit("Not able to plot from these files yet.")
-    
-    #print("There are %d time levels in the file %s" % (len(times),str(nesteddata)))
-
-    #  Map/figure has been set up here (bulk of the work), save axes instances for
-    #     use again later
     keep_ax_lst = ax.get_children()[:]
-
     # Transform lats and lons to map proj coords
     #x_n,y_n = m(grid_lon_n[:,:],grid_lat_n[:,:])
     xt_n,yt_n = m(grid_lont_n[:,:],grid_latt_n[:,:])
+
+    
+
+
+def mkplot(varname):
+    print("mkplot - "+str(multiprocessing.current_process()))
+    #fnd = pynemsio.nemsfile(nesteddata)
+    fnd = NETCDF_read(nesteddata)
+
+    pdb.set_trace()
 
     dispatcher=plot_Dictionary()
     if(levs[0]==63 or levs[0]=='all'): levels=np.arange(63,0,-1)
@@ -893,9 +843,9 @@ def plot_Dictionary():
 
 if __name__ == '__main__':
     #pool=multiprocessing.Pool(len(varnames)) # one processor per variable
-    pool=multiprocessing.Pool(8) # 8 processors for all variables. Just a little slower.
-    pool.map(mkplot,varnames) 
-    #mkplot(varnames[0])
+    #pool=multiprocessing.Pool(8) # 8 processors for all variables. Just a little slower.
+    #pool.map(mkplot,varnames) 
+    mkplot(varnames[0])
     toc=timer()
     time=toc-tic
     hrs=int(time/3600)

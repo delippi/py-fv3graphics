@@ -26,9 +26,11 @@ import pdb
 
 ######################   USER DEFINED SETTINGS    ############################################
 outputdir='/scratch4/NCEPDEV/meso/save/Donald.E.Lippi/FV3RDA/graphics_utils/'# output directory
-gesdir='/scratch4/NCEPDEV/meso/save/Donald.E.Lippi/data'  # directory containing your fv3nc ges files
-anldir='/scratch4/NCEPDEV/meso/save/Donald.E.Lippi/data'  # directory containing your fv3nc anl files
-startplot=datetime.strptime('2017080700','%Y%m%d%H')      # valid time
+#gesdir='/scratch4/NCEPDEV/meso/save/Donald.E.Lippi/data'  # directory containing your fv3nc ges files
+#anldir='/scratch4/NCEPDEV/meso/save/Donald.E.Lippi/data'  # directory containing your fv3nc anl files
+gesdir='/gpfs/hps2/stmp/Donald.E.Lippi/fv3gfs_dl2rw_DAS_exp_001_2018050218/gfs.20180503/00'
+anldir='/gpfs/hps2/stmp/Donald.E.Lippi/fv3gfs_dl2rw_DAS_exp_001_2018050218/gfs.20180503/00'
+startplot=datetime.strptime('2018050300','%Y%m%d%H')      # valid time
 nesteddata_ges = os.path.join(gesdir,'nggps2d.nest02.nc')    # name of guess file
 nesteddata_anl = os.path.join(anldir,'nggps2d.nest02.nc')    # name of analysis file
 nestedgrid = os.path.join(gesdir,'grid_spec.nest02.nc')      # name of grid spec file
