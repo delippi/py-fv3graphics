@@ -27,7 +27,9 @@ import ncepy
 plt.switch_backend('agg')
 import pdb
 
-######################   USER DEFINED SETTINGS    ############################################
+
+
+######################SER DEFINED SETTINGS    ############################################
 CDUMP='gdas' #gdas or gfs
 #datadir='/gpfs/hps2/stmp/Donald.E.Lippi/fv3gfs_dl2rw_DAS_exp_001_2018050218/'+CDUMP+'.20180503/00/'
 #datadir='/scratch4/NCEPDEV/stmp3/Donald.E.Lippi/fv3gfs_dl2rw/2018050218/rw_001/gdas.20180503/06/'
@@ -47,6 +49,15 @@ try:
    valcyc=str(int(sys.argv[6])).zfill(2)
    valtime=str(int(sys.argv[7]))
    fhr=str(int(sys.argv[8])).zfill(3)
+
+   nature_filename=str(sys.argv[9])
+   naturedir=str(sys.argv[10])
+   npdy=str(int(sys.argv[11]))
+   ncyc=str(int(sys.argv[12])).zfill(2)
+   nvalpdy=str(int(sys.argv[13]))
+   nvalcyc=str(int(sys.argv[14])).zfill(2)
+   nvaltime=str(int(sys.argv[15]))
+   nfhr=str(int(sys.argv[16])).zfill(3)
 except:
    exit()
 #   filename='gfs.t00z.atmf000.nc4'
@@ -58,7 +69,9 @@ except:
 #   fhr="000"
 outputdir=datadir 
 print(filename,pdy,cyc,valpdy,valcyc,valtime)
+print(nature_filename,npdy,ncyc,nvalpdy,nvalcyc,nvaltime)
 data_in = os.path.join(datadir,filename)   # name of analysis file
+nature_in=os.path.join(naturedir,nature_filename) 
 #data_in = os.path.join(datadir,'gdas.t18z.atmf000.nc4')   # name of analysis file
 dom="CONUS"                                               # domain (can be CONUS, SC, etc.)
 proj="gnom"                                               # map projection
@@ -119,27 +132,93 @@ def mkplot(varname):
     # Transform lats and lons to map proj coords
     lon,lat=np.meshgrid(lons,lats)
     xi,yi = m(lon,lat)
+
+
+    print(nature_in)
+    nature_fnd = Dataset(nature_in,mode='r')
+    global nature_lons,nature_lats
+    nature_lons  = nature_fnd.variables['lon'][:]
+    nature_lats  = nature_fnd.variables['lat'][:]
+    nature_lons=nature_lons-180
+    nature_nlon=len(nature_lons)
+    keep_ax_lst = ax.get_children()[:]
+    # Transform lats and lons to map proj coords
+    nature_lon,nature_lat=np.meshgrid(nature_lons,nature_lats)
+    nxi,nyi = m(nature_lon,nature_lat)
+
+
+
+
+
     dispatcher=plot_Dictionary()
     global model_level
     model_level='column max'
     if(model_level == 'column max'):
-       var_n=fnd.variables[str(varname)+'midlayer'][0,:,:,:]
+       var_n=              fnd.variables[str(varname)+'midlayer'][0,:,:,:]
+       nature_var_n=nature_fnd.variables[str(varname)+'midlayer'][0,:,:,:]
        var_n=var_n.max(axis=0) #take max across axis 0, in this case, max at each point across the column.
+       nature_var_n=nature_var_n.max(axis=0)
+       # HERE IS WHERE WE COMPUTE THE DIFFERENCE BETWEEN EXPERIMENT AND TRUTH
+#       var_n=np.ma.masked_where(var_n < 5,var_n)
+#       nature_var_n=np.ma.masked_where(nature_var_n < 5,nature_var_n)
+#       var_n=np.clip(var_n,0,100)
+#       nature_var_n=np.clip(nature_var_n,0,100)
+       
+       
+       diff_var_n=(var_n)-(nature_var_n)
+       print(type(diff_var_n))
     else:
        var_n=fnd.variables[str(varname)+'midlayer'][0,64-model_level,:,:] 
+       nature_var_n=nature_fnd.variables[str(varname)+'midlayer'][0,64-model_level,:,:] 
     var_n=np.roll(var_n,nlon/2,axis=1)
-    print(np.max(var_n))
+    nature_n=np.roll(nature_var_n,nlon/2,axis=1)
+    print(np.max(var_n),np.min(var_n))
+    print(np.max(nature_var_n),np.min(nature_var_n))
+    print(np.max(diff_var_n),np.min(diff_var_n))
     try: # Doing it this way means we only have to supply a corresponding definition for cm,clevs,etc.
        #print(str(varname)+": Plotting forecast hour {:s} valid {:s}Z".format(str(fhr).zfill(3),outdate))
        function=dispatcher[varname]
        var_n,clevs,cticks,cm,units,longname,title=function(var_n)
+       #nature_var_n,clevs,cticks,cm,units,longname,title=function(nature_var_n)
+
     except KeyError:
        raise ValueError("invalid varname:"+varname)
-    cs = m.contourf(xi,yi,var_n,clevs,cmap=cm,extend='both')
-    #CS = m.contour(xi,yi,var_n,clevs,colors='k')
-    cbar = m.colorbar(cs,location='bottom',pad="15%",extend="both",ticks=cticks)
-    cbar.ax.tick_params(labelsize=8.5)
-    cbar.set_label(varname+": "+longname+" ["+str(units)+"]")
+
+
+    option1=True
+    option2=False
+    if(option1):
+       cm.set_under(color='white',alpha=0)
+       cm.set_over(color='white',alpha=0)
+       cs1=  m.contourf(nxi,nyi,nature_var_n,clevs,cmap=mrms_radarmap_grayscale(),extend='both')
+       #cs1=  m.contourf(nxi,nyi,nature_var_n,clevs,cmap=cm,extend='both')
+       cs2 = m.contourf(xi,yi,       var_n,clevs,cmap=cm,                       extend='both')
+       cbar1 = m.colorbar(cs1,location='bottom',pad="-4%",extend="both",ticks=cticks)
+       cbar2 = m.colorbar(cs2,location='bottom',pad="8%",extend="both",ticks=cticks)
+       cbar1.ax.tick_params(labelsize=8.5)
+       cbar2.ax.tick_params(labelsize=8.5)
+       cbar2.set_label(varname+": "+longname+" ["+str(units)+"]")
+    if(option2):
+       #clevs  =[-75,-70,-65,-60,-55,-50,-45,-40,-35,-30,-25,-20,-15,-10,-5,0,\
+       #           5,10,15,20,25,30,35,40,45,50,55,60,65,70,75] # dbz
+       clevs  =[-40,-35,-30,-25,-20,-15,-10,-5,0,5,10,15,20,25,30,35,40] # dbz
+       clevmin,clevmax,inc=-40.0,40.0,5.
+       N=int((-1.*clevmin+clevmax)/inc+1)
+       clevs = np.linspace(clevmin,clevmax,N)
+       cticks=clevs
+       cmap=colormap.diff_colormap(clevs)
+
+       h1="XX"
+       h2=""
+       hatches=[ h1,h1,h1,h1,h1,h1,h1,h1,h1,h1,h1,h1,h1,h1,h1,\
+                 h2,h2,h2,h2,h2,h2,h2,h2,h2,h2,h2,h2,h2,h2,h2,h2]
+       #cs = m.contourf(xi,yi,var_n,clevs,cmap=mrms_radarmap_diff(),hatches=hatches,extend='both')
+       cs = m.contourf(xi,yi,diff_var_n,clevs,cmap=cmap,extend='both')
+       cbar = m.colorbar(cs,location='bottom',pad="8%",extend="both",ticks=cticks)
+       cbar.ax.tick_params(labelsize=8.5)
+       cbar.set_label(varname+": "+longname+" ["+str(units)+"]")
+       
+
     plt.title(title)
 
     # Make zoomed inset between title and save fig so that the title is placed correctly.
@@ -178,7 +257,7 @@ def mkplot(varname):
 
     #plt.savefig(outputdir+'/'+varname + '_%s.png' % (valtime),dpi=250, bbox_inches='tight')
 #    plt.savefig(outputdir+'/gfs.t%sz.atmf%s_%s_%s_v%s.png' % (cyc,fhr,varname,pdy+cyc,valtime),dpi=250, bbox_inches='tight')
-    plt.savefig(outputdir+'/gfs.t%sz.%s_v%s_atmf%s_%s.png' % (cyc,pdy+cyc,valtime,fhr,varname),dpi=250, bbox_inches='tight')
+    plt.savefig(outputdir+'/gfs.t%sz.%s_v%s_atmf%s_%s_againstTruth.png' % (cyc,pdy+cyc,valtime,fhr,varname),dpi=250, bbox_inches='tight')
 
     print("fig is located: "+outputdir)
 
@@ -186,6 +265,51 @@ def mkplot(varname):
 
 
 ############### useful functions ###########################################
+def mrms_radarmap_diff():
+    from matplotlib import colors
+    rneg=[0.60,1.00,0.60,0.80,1.00,1.00,0.91,1.00,0.00,0.00,0.00,0.00,0.00,0.00,1.00]
+    rpos=[1.00,0.00,0.00,0.00,0.00,0.00,0.00,1.00,0.91,1.00,1.00,0.80,0.60,1.00,0.60]
+    gneg=[0.20,0.00,0.00,0.20,0.00,0.56,0.75,1.00,0.56,0.78,1.00,0.00,0.63,0.93,1.00]
+    gpos=[1.00,0.93,0.63,0.00,1.00,0.78,0.56,1.00,0.75,0.56,0.00,0.20,0.00,0.00,0.20]
+    bneg=[0.80,1.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.96,0.96,0.93,1.00]
+    bpos=[1.00,0.93,0.96,0.96,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,1.00,0.80]
+
+    r=rneg+rpos
+    g=gneg+gpos
+    b=bneg+bpos
+
+
+    rgb=zip(r,g,b)
+    cmap=colors.ListedColormap(rgb,len(r))
+    cmap.set_over(color='white')
+    cmap.set_under(color='white')
+    return cmap
+
+
+
+def mrms_radarmap_grayscale():
+    from matplotlib import colors
+    r=[0.00,0.00,0.00,0.00,0.00,0.00,1.00,0.91,1.00,1.00,0.80,0.60,1.00,0.60]
+    g=[0.93,0.63,0.00,1.00,0.78,0.56,1.00,0.75,0.56,0.00,0.20,0.00,0.00,0.20]
+    b=[0.93,0.96,0.96,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,1.00,0.80]
+    gray=[0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00]
+
+    for i in range(len(r)):
+        red   = r[i]*0.2989
+        green = g[i]*0.5870
+        blue  = b[i]*0.1140
+        gray[i] = red + green + blue
+
+    
+    rgb=zip(r,g,b)
+    rgb=zip(gray,gray,gray)
+    print(rgb)
+    cmap=colors.ListedColormap(rgb,len(r))
+    cmap.set_over(color='white')
+    cmap.set_under(color='white')
+    return cmap
+
+
 def roundTime(dt=None, roundTo=60):
    """Round a datetime object to any time laps in seconds
    dt : datetime.datetime object, default now.

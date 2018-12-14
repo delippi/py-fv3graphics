@@ -1,12 +1,3 @@
-#!/usr/bin/env python
-#PBS -N fv3py
-#PBS -l walltime=0:05:00
-#PBS -l nodes=1:ppn=8
-#PBS -q debug
-#PBS -A fv3-cpu
-#PBS -o fv3py.out
-#PBS -j oe
-
 from timeit import default_timer as timer
 tic=timer()
 import sys,os
@@ -29,15 +20,9 @@ import pdb
 
 ######################   USER DEFINED SETTINGS    ############################################
 CDUMP='gdas' #gdas or gfs
-#datadir='/gpfs/hps2/stmp/Donald.E.Lippi/fv3gfs_dl2rw_DAS_exp_001_2018050218/'+CDUMP+'.20180503/00/'
-#datadir='/scratch4/NCEPDEV/stmp3/Donald.E.Lippi/fv3gfs_dl2rw/2018050218/rw_001/gdas.20180503/06/'
-#datadir='/scratch4/NCEPDEV/stmp3/Donald.E.Lippi/fv3gfs_dl2rw/2018062800/rw_001/gfs.20180628/00/'
-#datadir='/scratch4/NCEPDEV/stmp3/Donald.E.Lippi/fv3gfs_dl2rw/2018091100/NATURE-2018091100-2018091800/gfs.20180911/00'
-#datadir='/scratch4/NCEPDEV/stmp3/Donald.E.Lippi/fv3gfs_dl2rw/2018052418/NATURE-2018052418-2018060100/gdas.20180524/18'
-global SOT
-SOT='NA' # 90-deg or 00-deg or NA
+
 global pdy,cyc,valpdy,valcyc,valtime,fhr
-#data_in = os.path.join(datadir,'gdas.t06z.atminc.nc')   # name of analysis file
+
 try:
    filename=str(sys.argv[1])
    datadir=str(sys.argv[2])
@@ -49,32 +34,37 @@ try:
    fhr=str(int(sys.argv[8])).zfill(3)
 except:
    exit()
-#   filename='gfs.t00z.atmf000.nc4'
-#   pdy="20180911"
-#   cyc="00"
-#   valpdy="20180911"
-#   valcyc="00"
-#   valtime="2018091100"
-#   fhr="000"
+
 outputdir=datadir 
 print(filename,pdy,cyc,valpdy,valcyc,valtime)
 data_in = os.path.join(datadir,filename)   # name of analysis file
-#data_in = os.path.join(datadir,'gdas.t18z.atmf000.nc4')   # name of analysis file
 dom="CONUS"                                               # domain (can be CONUS, SC, etc.)
 proj="gnom"                                               # map projection
 #proj="cyl"
 varnames=[                                                # uncomment the desired variables below
-#          'ugrd',#\
-          'dbz',#\
-#          'vgrd',\
-#          'T_inc',\
+#        'ugrd',   \
+#        'vgrd',   \
+#        'dzdt',   \
+        'delz',   \
+#        'tmp',    \
+#        'dpres',  \
+#        'spfh',   \
+#        'clwmr',  \
+#        'rwmr',   \
+#        'icmr',   \
+#        'snmr',   \
+#        'grle',   \
+#        'o3mr',   \
+#        'cld_amt',\
+#        'pressfc',\
+#        'hgtsfc', \
+#        'dbz',    #\
          ]
 ######################   USER DEFINED SETTINGS    ############################################
 
 # Create the basemap
 # create figure and axes instances
 fig = plt.figure(figsize=(8,8))
-#ax = fig.add_axes([0.1,0.1,0.8,0.8])
 ax = plt.subplot(111)
 
 # Setup map corners for plotting.  This will give us CONUS
@@ -96,13 +86,7 @@ m = Basemap(llcrnrlon=llcrnrlon+offsetright,   llcrnrlat=llcrnrlat+offsetup,
 parallels = np.arange(-80.,80,10.)
 meridians = np.arange(-180,180.,10.)
 m.drawcoastlines(linewidth=1.25)
-#m.drawstates(linewidth=1.25)
 m.drawcountries(linewidth=1.25)
-#m.drawparallels(parallels,labels=[1,0,0,1])
-#m.drawmeridians(meridians,labels=[1,0,0,1],rotation=45)
-#for m in meridians:
-#    meridians[m][1][0].set_rotation(45)
-#m.drawcounties(linewidth=0.2, color='k')
 
 def mkplot(varname):
     print("mkplot - "+str(multiprocessing.current_process()))
@@ -122,6 +106,7 @@ def mkplot(varname):
     dispatcher=plot_Dictionary()
     global model_level
     model_level='column max'
+    model_level=40
     if(model_level == 'column max'):
        var_n=fnd.variables[str(varname)+'midlayer'][0,:,:,:]
        var_n=var_n.max(axis=0) #take max across axis 0, in this case, max at each point across the column.
@@ -130,54 +115,21 @@ def mkplot(varname):
     var_n=np.roll(var_n,nlon/2,axis=1)
     print(np.max(var_n))
     try: # Doing it this way means we only have to supply a corresponding definition for cm,clevs,etc.
-       #print(str(varname)+": Plotting forecast hour {:s} valid {:s}Z".format(str(fhr).zfill(3),outdate))
        function=dispatcher[varname]
        var_n,clevs,cticks,cm,units,longname,title=function(var_n)
     except KeyError:
        raise ValueError("invalid varname:"+varname)
-    cs = m.contourf(xi,yi,var_n,clevs,cmap=cm,extend='both')
-    #CS = m.contour(xi,yi,var_n,clevs,colors='k')
-    cbar = m.colorbar(cs,location='bottom',pad="15%",extend="both",ticks=cticks)
-    cbar.ax.tick_params(labelsize=8.5)
-    cbar.set_label(varname+": "+longname+" ["+str(units)+"]")
+
+    m.contour(xi,yi,var_n,color='k')
+
+    #cs = m.contourf(xi,yi,var_n,clevs,cmap=cm,extend='both')
+    #cbar = m.colorbar(cs,location='bottom',pad="5%",extend="both",ticks=cticks)
+    #cbar.ax.tick_params(labelsize=8.5)
+    #cbar.set_label(varname+": "+longname+" ["+str(units)+"]")
     plt.title(title)
 
-    # Make zoomed inset between title and save fig so that the title is placed correctly.
-    #oblat,oblon=33.36333333,-84.56583333
-    #ratio=16./9.
-    #num=3.0 #numerator, also the half width of the plot (num=1 means 2 degrees lon wide).
-    #x1,y1,x2,y2= oblon-num, oblat-(num/ratio), oblon+num, oblat+(num/ratio)
-    #ratioaxinszoom=16./num #8./num #5./num
-    #axins = zoomed_inset_axes(ax, ratioaxinszoom, loc=1)
-    #map2 = Basemap(llcrnrlon=x1,llcrnrlat=y1,urcrnrlon=x2,urcrnrlat=y2,\
-    #          rsphere=(6378137.00,6356752.3142),\
-    #          resolution=res,projection=proj,\
-    #          lat_0=lat_0,lon_0=lon_0,ax=ax)
-    #map2.drawcoastlines(linewidth=1.25)
-    #map2.drawstates(linewidth=1.25)
-    #map2.drawcountries(linewidth=1.25)
-    #map2.drawcounties(linewidth=0.2)
-    #map2.contourf(xi,yi,var_n,clevs,cmap=cm,latlon=True,extend='both')
-    #CS = map2.contour(xi,yi,var_n,clevs,colors='k')
-    #plt.clabel(CS, inline=1, fontsize=10, colors='k')
-    #map2.scatter(oblon,oblat,s=25,color='k',marker='.',latlon=True)
-    #x1,y1=m(x1,y1)
-    #x2,y2=m(x2,y2)
-#    axins.set_xlim(x1,x2)
-#    axins.set_ylim(y1,y2)
     plt.xticks(visible=False)
     plt.yticks(visible=False)
-#    m.scatter(-76.88,34.76,s=200,color='k',marker='*',latlon=True)
-#    m.scatter(-78.49,35.67,s=200,color='k',marker='*',latlon=True)
-#    m.scatter(-77.01,36.98,s=200,color='k',marker='*',latlon=True)
-    #mark_inset(ax, axins, loc1=2, loc2=4, fc="none", lw=1.75, ec="green")
-    #for axis in ['top','bottom','left','right']:
-    #    axins.spines[axis].set_linewidth(1.75)
-    #    axins.spines[axis].set_color('g')
-    ########### END make inset ##################
-
-    #plt.savefig(outputdir+'/'+varname + '_%s.png' % (valtime),dpi=250, bbox_inches='tight')
-#    plt.savefig(outputdir+'/gfs.t%sz.atmf%s_%s_%s_v%s.png' % (cyc,fhr,varname,pdy+cyc,valtime),dpi=250, bbox_inches='tight')
     plt.savefig(outputdir+'/gfs.t%sz.%s_v%s_atmf%s_%s.png' % (cyc,pdy+cyc,valtime,fhr,varname),dpi=250, bbox_inches='tight')
 
     print("fig is located: "+outputdir)
@@ -204,61 +156,54 @@ def gemplot(clist):
     return cm
 
 ############### plot_ functions ###########################################
-def plot_ugrd(var_n): 
-    """zonal wind [m/s]"""
-    longname="zonal wind (u)"; units="m/s"
-    if(SOT == 'NA'):
-       clevmin,clevmax,inc=-2.,2.,.2
-       cticks=[-2.,-1.6,-1.2,-0.8,-0.4,0.,0.4,0.8,1.2,1.6,2.]
-    N=int((-1.*clevmin+clevmax)/inc+1)
-    clevs = np.linspace(clevmin,clevmax,N)
-    cm=colormap.diff_colormap(clevs)
-    if(SOT == 'NA'):
-      title="Increments (anl - bkgnd) of %s %d \nmodel level: %2d" % (longname,date,model_level)
-    else:
-      title="%s Single Observation Experiment \nIncrements (anl - bkgnd) of %s %d \nmodel level: %2d" \
-           % (SOT,longname,date,model_level)
+#/gpfs/hps3/emc/meso/save/Donald.E.Lippi/fv3gfs-20181022/sorc/fv3gfs.fd/FV3/atmos_cubed_sphere/driver/fvGFS/fv_nggps_diag.F90
+
+#"gfs_dyn",     "ucomp",       "ugrd",       zonal wind (m/sec) 
+#"gfs_dyn",     "vcomp",       "vgrd",       meridional wind (m/sec)
+#"gfs_dyn",     "sphum",       "spfh",       
+#"gfs_dyn",     "temp",        "tmp",        temperature (K)
+#"gfs_dyn",     "liq_wat",     "clwmr",      
+#"gfs_dyn",     "ice_wat",     "icmr",       
+#"gfs_dyn",     "snowwat",     "snmr",       
+#"gfs_dyn",     "rainwat",     "rwmr",       
+#"gfs_dyn",     "graupel",     "grle",       
+##"gfs_dyn",     "ice_nc",      "nccice",    
+##"gfs_dyn",     "rain_nc",     "nconrd",    
+#"gfs_dyn",     "o3mr",        "o3mr",       
+#"gfs_dyn",     "cld_amt",     "cld_amt",
+#"gfs_dyn",     "delp",        "dpres",      pressure thickness (pa)
+#"gfs_dyn",     "delz",        "delz",       height thickness (m)
+##"gfs_dyn",     "pfhy",        "preshy",    hydrostatic pressure (pa)
+##"gfs_dyn",     "pfnh",        "presnh",    non-hydrostatic pressure (pa)
+#"gfs_dyn",     "w",           "dzdt",       vertical wind (m/sec)
+#"gfs_dyn",     "ps",          "pressfc",    surface pressure (pa)
+#"gfs_dyn",     "hs",          "hgtsfc",     surface geopotential height (gpm)
+#"gfs_dyn",     "reflectivity","dbz",        Stoelinga simulated reflectivity (dBz)
+
+
+
+def plot_delz(var_n):
+    """height thickness [m]"""
+    longname="height thickness"; units="dam"
+    var_n=var_n/10. # convert to decameters
+    clevs=np.arange(500,600,5).tolist() 
+    cticks=clevs
+    cm='k'
+    title="@EXP@ height thickness \n Valid %s %sZ" % (valpdy,valcyc)
     return(var_n,clevs,cticks,cm,units,longname,title)
 
-def plot_vgrd(var_n): 
-    """meridional wind [m/s]"""
-    longname="meridional wind (v)"; units="m/s"
-    if(SOT == '00-deg'):
-       clevmin,clevmax,inc=-1.,1.,.1
-       cticks=[-1.,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1.]
-    elif(SOT == '90-deg'):
-       clevmin,clevmax,inc=-1./100,1./100,.1/100
-       cticks=[-1.,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1.]/100
-    elif(SOT == 'NA'):
-       #clevmin,clevmax,inc=-5.,5.,.5
-       #cticks=[-5.,-4.,-3.,-2.,-1.,0.,1.,2.,3.,4.,5.]
-       clevmin,clevmax,inc=-1.,1.,.1
-       cticks=[-1.,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1.]
-    N=int((-1.*clevmin+clevmax)/inc+1)
-    clevs = np.linspace(clevmin,clevmax,N)
-    cm=colormap.diff_colormap(clevs)
-    if(SOT == 'NA'):
-      title="Increments (anl - bkgnd) of %s %d \nmodel level: %2d" % (longname,date,model_level)
-    else:
-      title="%s Single Observation Experiment \nIncrements (anl - bkgnd) of %s %d \nmodel level: %2d" \
-           % (SOT,longname,date,model_level)
-    return(var_n,clevs,cticks,cm,units,longname,title)
 
 def plot_dbz(var_n): 
     """reflectivity [dBz]"""
     longname="reflectivity"; units="dBZ"
-    clevs=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75] # dbz 
-    cticks=[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75] # dbz 
-    cm=ncepy.mrms_radarmap()
-    if(SOT == 'NA'):
-      if(model_level=='column max'):
-         title="FV3GFS Composite Simulated Reflectivity F%s \n%s %sZ Valid %s %sZ" % (fhr,pdy,cyc,valpdy,valcyc)
-      else:
-         title="FV3GFS Simulated Reflectivity F%s \n%s %sZ Valid %s %sZ" % (fhr,pdy,cyc,valpdy,valcyc)
-    else:
-      title="%s Single Observation Experiment \nIncrements (anl - bkgnd) of %s %d \nmodel level: %2d" \
-           % (SOT,longname,date,model_level)
+    clevs=[-5,0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75] # dbz 
+    cticks=[-5,0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75] # dbz 
+    #cm=ncepy.radarmap()
+    cm=mrms_radarmap_with_gray()
+    if(model_level=='column max'):
+        title="@EXP@ Composite Simulated Reflectivity \n Valid %s %sZ" % (valpdy,valcyc)
     return(var_n,clevs,cticks,cm,units,longname,title)
+
 ############### Dictionary for plot_function calls ###################################
 def plot_Dictionary():
     #As fields are added to fv3 output just put those in the following dictionary
@@ -270,11 +215,37 @@ def plot_Dictionary():
        appropriate variable specific name, units, clevs, clist, and colormap for plotting.
     """
     dispatcher={  
-        'ugrd':plot_ugrd,
-        'vgrd':plot_vgrd,
+#        'ugrd':plot_ugrd,
+#        'vgrd':plot_vgrd,
+#        'dzdt':plot_dzdt,
+        'delz':plot_delz,
+#        'tmp':plot_tmp,
+#        'dpres':plot_dpres,
+#        'spfh':plot_spfh,
+#        'clwmr':plot_clwmr,
+#        'rwmr':plot_rwmr,
+#        'icmr':plot_icmr,
+#        'snmr':plot_snmr,
+#        'grle':plot_grle,
+#        'o3mr':plot_o3mr,
+#        'cld_amt':plot_cld_amt,
+#        'pressfc':plot_pressfc,
+#        'hgtsfc':plot_hgtsfc,
         'dbz':plot_dbz,
                }
     return dispatcher  
+
+def mrms_radarmap_with_gray():
+    from matplotlib import colors
+    r=[0.66,0.41,0.00,0.00,0.00,0.00,0.00,0.00,1.00,0.91,1.00,1.00,0.80,0.60,1.00,0.60]
+    g=[0.66,0.41,0.93,0.63,0.00,1.00,0.78,0.56,1.00,0.75,0.56,0.00,0.20,0.00,0.00,0.20]
+    b=[0.66,0.41,0.93,0.96,0.96,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,1.00,0.80]
+    rgb=zip(r,g,b)
+    cmap=colors.ListedColormap(rgb,len(r))
+    cmap.set_over(color='white')
+    cmap.set_under(color='white')
+    return cmap
+
 
 #def Make_Zoomed_Inset_Plot():
 
